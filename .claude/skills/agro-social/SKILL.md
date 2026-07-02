@@ -3,7 +3,7 @@ name: agro-social
 description: Vezme publikovaný zemědělský článek z Profifarmar.cz a vytvoří z něj příspěvek na sociální sítě pomocí Canva šablony. Pipeline načte nejnovější publikovaný článek přes Profifarmar API, zkopíruje Canva šablonu (DAHOBdpJ1tk - ProfiFarmář 4:5 Stacked), vymění kategorii, datum, titulek a cover fotku, exportuje PNG (1080×1334, preserved aspect), nahraje na Cloudinary a publikuje IHNED přes Buffer na Instagram a Facebook. Použij vždy, když uživatel chce udělat příspěvek na sítě z článku, postnout nejnovější článek, sdílet článek na sociální sítě, nebo sdílet článek na Instagram a Facebook. Trigger keywords - agro social, postni na sítě, sdílej článek, social příspěvek z článku, canva šablona článek, příspěvek instagram facebook článek, social media agro článek.
 ---
 
-# Agro-Social Skill
+# Agro-Socials Skill
 
 Vytvoří social media příspěvek z **publikovaného článku** na Profifarmar.cz. Naplní Canva šablonu titulkem,
 kategorií, datem a cover fotkou, vyexportuje PNG, nahraje na Cloudinary a **ihned publikuje** příspěvky na
@@ -194,7 +194,7 @@ Cloudinary MCP nepodporuje `file://` cesty — upload jde přes REST API z PC (W
 > `[System.Environment]::SetEnvironmentVariable("CLOUDINARY_API_SECRET","...","User")` (analogicky ostatní).
 
 ```
-folder    = "ČLÁNKY"
+folder    = "SOCIALS"
 publicId  = "social_[DATUM_SLUG]_[ID]"   ← jen ASCII, čísla, pomlčky, podtržítka!
 eager     = "w_1080,c_scale,q_100,f_png"  ← čistý PNG, žádný flatten (není potřeba)
 ```
@@ -213,7 +213,7 @@ if (-not $cloudName -or -not $apiKey -or -not $apiSecret) {
     Write-Output "[AGRO-SOCIAL] CHYBA — Cloudinary env proměnné chybí."
     exit 1
 }
-$folder    = "ČLÁNKY"
+$folder    = "SOCIALS"
 $publicId  = "social_[DATUM_SLUG]_[ID]"
 $eager     = "w_1080,c_scale,q_100,f_png"
 
