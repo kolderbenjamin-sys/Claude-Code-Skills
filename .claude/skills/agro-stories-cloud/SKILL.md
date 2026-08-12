@@ -148,6 +148,14 @@ Renderer vypíše např. `rendered /tmp/story_x.png  headline 82px / 3 lines  pa
 zmenší titulek dokud se nevejde, a podle výšky textu dopočítá, kde začíná krémový panel — takže
 krátký i dlouhý titulek mají stejný spodní rytmus. Výstup je vždy **1080×1920 PNG bez alfa kanálu**.
 
+**Vizuální parita s feedem.** Všechny hodnoty v konstantách `C` a `M` ve skriptu jsou odměřené
+pixel po pixelu z reálného 4:5 feed příspěvku, ne odhadnuté. Konkrétně: krémová `#F4EFE5`,
+pilulka `#B8473B`, titulek `#130F0A`, zlatá `#8A6A2E`, **plnošířková zlatá dělící linka `#C49A2E`
+vysoká 7 px** pod coverem, **vlasová linka `#D5D1C7`** nad patičkou, titulek Playfair Display 80 px
+s **prokladem 1.09** (záměrně těsný), datum Montserrat 25 px / `.12em`, patička vlevo
+**Roboto Mono** 24 px, vpravo Montserrat 26 px. Levý okraj 60 px, šířka textu 954 px — stejně
+jako na feedu. Když budeš cokoli z toho měnit, změň to i na feedu, jinak se formáty rozejdou.
+
 **Bezpečné zóny Instagramu** jsou už zadrátované v rozvržení: horních ~250 px (jméno profilu)
 a spodních ~250 px (lišta odpovědí a link sticker) zůstávají prázdné. Nesahej na `M.logoTop`,
 `M.footerTop` ani `M.textBottom` ve skriptu, pokud tohle neřešíš vědomě.
