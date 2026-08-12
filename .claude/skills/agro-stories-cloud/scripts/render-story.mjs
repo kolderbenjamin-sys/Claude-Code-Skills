@@ -4,7 +4,7 @@
 // Usage: node render-story.mjs <input.json> <output.png>
 //   input.json: { titulek, kategorie, datum, coverPath, assetsDir }
 //
-// Every asset (fonts, logo, cover) is inlined as a data: URI, so Chromium renders
+// Every asset (fonts, cover) is inlined as a data: URI, so Chromium renders
 // fully offline and the output is byte-stable for the same input.
 //
 // All type sizes, colours, rules and spacings below were measured pixel-for-pixel
@@ -73,7 +73,6 @@ const C = {
   rule: '#C49A2E',      // the thick divider under the cover
   hairline: '#D5D1C7',  // the thin rule above the footer
   footer: '#2A261F',
-  wordmark: '#FBF7EF',
 };
 
 const M = {
@@ -85,11 +84,9 @@ const M = {
   dateGap: 35,         // date ink → headline ink
   hairlineGap: 60,     // headline ink → hairline
   footerGap: 24,       // hairline → footer ink
-  footerBottom: 1659,  // last ink row before IG's ~250px reply-bar zone
+  footerBottom: 1709,  // last ink row before IG's ~200px reply-bar zone
   panelTopMin: 900,
   panelTopMax: 1240,
-  logoTop: 300,        // below IG's ~250px profile-name overlay
-  logoSize: 76,
   pillH: 60,
   pillGap: 31,         // pill bottom → top of the gold divider
   sizeMax: 80,
@@ -107,17 +104,10 @@ const html = `<!doctype html><html lang="cs"><head><meta charset="utf-8">
   body{ background:${C.cream}; position:relative; overflow:hidden;
         -webkit-font-smoothing:antialiased; text-rendering:geometricPrecision; }
 
+  /* No logo or wordmark over the cover: Instagram already draws the account name
+     and avatar in the top overlay, so repeating the brand there just competes with it. */
   #cover{ position:absolute; top:0; left:0; width:${M.W}px; height:1000px; overflow:hidden; }
   #cover img{ width:100%; height:100%; object-fit:cover; object-position:center; display:block; }
-  /* keeps the cream wordmark legible over a bright sky */
-  .scrim{ position:absolute; top:0; left:0; width:${M.W}px; height:520px;
-          background:linear-gradient(180deg, rgba(0,0,0,.36) 0%, rgba(0,0,0,.13) 48%, rgba(0,0,0,0) 100%); }
-
-  .brand{ position:absolute; top:${M.logoTop}px; left:${M.marginX}px;
-          display:flex; align-items:center; gap:26px; }
-  .brand img{ width:${M.logoSize}px; height:${M.logoSize}px; display:block; }
-  .brand span{ font-family:'Playfair Display',serif; font-weight:700; font-size:56px;
-               color:${C.wordmark}; letter-spacing:.005em; text-shadow:0 2px 10px rgba(0,0,0,.28); }
 
   #pill{ position:absolute; left:${M.marginX - 7}px; top:900px;
          height:${M.pillH}px; display:inline-flex; align-items:center;
@@ -146,8 +136,7 @@ const html = `<!doctype html><html lang="cs"><head><meta charset="utf-8">
   #footer .r{ font-family:'Montserrat',sans-serif; font-weight:600; font-size:26px;
               letter-spacing:.051em; color:${C.gold}; }
 </style></head><body>
-  <div id="cover"><img src="data:${coverMime};base64,${coverBuf.toString('base64')}" alt=""><div class="scrim"></div></div>
-  <div class="brand"><img src="data:image/png;base64,${b64(join(A, 'logo-profifarmar.png'))}" alt=""><span>Profi Farmář</span></div>
+  <div id="cover"><img src="data:${coverMime};base64,${coverBuf.toString('base64')}" alt=""></div>
   <div id="pill">${esc(cfg.kategorie)}</div>
   <div id="rule"></div>
   <div id="panel"></div>

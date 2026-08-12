@@ -156,9 +156,10 @@ s **prokladem 1.09** (záměrně těsný), datum Montserrat 25 px / `.12em`, pat
 **Roboto Mono** 24 px, vpravo Montserrat 26 px. Levý okraj 60 px, šířka textu 954 px — stejně
 jako na feedu. Když budeš cokoli z toho měnit, změň to i na feedu, jinak se formáty rozejdou.
 
-**Bezpečné zóny Instagramu** jsou už zadrátované v rozvržení: horních ~250 px (jméno profilu)
-a spodních ~250 px (lišta odpovědí a link sticker) zůstávají prázdné. Nesahej na `M.logoTop`,
-`M.footerTop` ani `M.textBottom` ve skriptu, pokud tohle neřešíš vědomě.
+**Bezpečné zóny Instagramu** jsou už zadrátované v rozvržení. Spodních **~200 px** (lišta odpovědí
+a link sticker) zůstává prázdných — řídí to `M.footerBottom`, od kterého se rozvržení kotví
+směrem nahoru. Nahoře **není žádné logo ani nápis „Profi Farmář"**: Instagram tam sám kreslí
+avatar a jméno účtu, takže by si to jen konkurovalo. Cover proto začíná rovnou fotkou.
 
 **Ověření (nepovinné, ale levné):**
 ```bash
@@ -403,7 +404,7 @@ pořadí a **vždy vypiš Cloudinary URL i text**, ať se práce neztratí:
 | Chromium se nespustí | Skript hledá binárku v `$PLAYWRIGHT_BROWSERS_PATH`; případně přebij přes `CHROMIUM_PATH=/cesta/chrome` |
 | V titulku jsou místo háčků obdélníky | Někdo vyměnil TTF za `latin`-only subset — vrať nesubsetované soubory z Google Fonts (viz `assets/FONTS-LICENSE.md`) |
 | Titulek přeteče nebo je titěrný | Zkrať ho v Kroku 2 na ~70 znaků; auto-fit je jen záchranná brzda (82 px → min 46 px) |
-| Text ve story překrytý UI Instagramu | Sahal někdo na `M.logoTop` / `M.footerTop` / `M.textBottom`? Horních i spodních ~250 px musí zůstat prázdných |
+| Text ve story překrytý UI Instagramu | Sahal někdo na `M.footerBottom`? Spodních ~200 px musí zůstat prázdných, tam padá lišta odpovědí a link sticker |
 | Cover je divně oříznutý | Renderer dělá `object-fit: cover` na střed. U extrémně širokých fotek radši vyber jiný článek |
 | Cloudinary `Invalid Signature` | Parametry v podpisu musí být **abecedně** a `eager` v něm musí být; `file` a `api_key` naopak ne |
 | Cloudinary `Invalid public_id` | Jen ASCII — použij `[DATUM_SLUG]`, ne `[DATUM]` s diakritikou a `·` |

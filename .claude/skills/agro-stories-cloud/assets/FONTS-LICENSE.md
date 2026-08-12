@@ -25,5 +25,6 @@ Písma byla vybrána pixelovým porovnáním tvaru liter s reálným feed přís
 
 ## Logo
 
-`logo-profifarmar.png` (240×240, s alfa kanálem) je kruhový znak ProfiFarmář vyříznutý
-z exportu vlastní Canva šablony `DAHOBdpJ1tk`. Majetek provozovatele Profifarmar.cz.
+Story **žádné logo nepoužívají** — Instagram sám kreslí avatar a jméno účtu v horní liště,
+takže by si značka konkurovala sama se sebou. Dřív tu byl `logo-profifarmar.png` vyříznutý
+z exportu Canva šablony `DAHOBdpJ1tk`; kdyby byl někdy potřeba, je v historii gitu.
