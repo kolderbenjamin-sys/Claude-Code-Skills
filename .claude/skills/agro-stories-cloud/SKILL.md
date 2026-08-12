@@ -1,19 +1,21 @@
 ---
 name: agro-stories-cloud
-description: "Vytvoří a naplánuje zemědělské STORY (9:16, 1080×1920) z publikovaných článků na Profifarmar.cz — na Instagram i Facebook přes Buffer. Jedním neinteraktivním během vybere 2 dosud nepoužité články, pro každý vyrenderuje story vizuál v brandu ProfiFarmář (cover fotka + kategorie + datum + titulek), nahraje na Cloudinary a naplánuje jednu story na ráno (08:00) a druhou na večer (19:00) Europe/Prague, aby byla na profilu pořád nějaká živá story. Na rozdíl od agro-socials-local a agro-socials-cloud, které dělají čtvercové 4:5 příspěvky do feedu přes Canva šablonu, tento skill dělá výhradně vertikální story a vizuál renderuje lokálně přes Chromium (nezávisle na Canva kvótě). Určeno pro Claude Code cloud Routine (Linux, bash/curl/jq/node, žádný interaktivní checkpoint). Použij vždy, když uživatel chce dát článek na story, naplánovat story, udělat 9:16 příspěvek nebo vertikální vizuál. Trigger keywords: agro stories, story z článku, dej to na story, naplánuj story, 9:16 story, vertikální příspěvek, instagram story agro, facebook story agro, ranní a večerní story, stories cloud, story routine."
+description: "Vytvoří a naplánuje zemědělské STORY (9:16, 1080×1920) z publikovaných článků na Profifarmar.cz — na Instagram i Facebook přes Buffer. Jedním neinteraktivním během vezme 3 články, které vyšly nad ránem, pro každý vyrenderuje story vizuál v brandu ProfiFarmář (cover fotka + kategorie + datum + titulek), nahraje na Cloudinary a naplánuje je na 07:00, 12:00 a 18:00 Europe/Prague, takže je na profilu živá story po celý den. Když článků na dnešek vyjde méně než tři, doplní zbytek staršími, ale jen sezónně neutrálními (nedá v srpnu story o dubnovém suchu). Na rozdíl od agro-socials-local a agro-socials-cloud, které dělají čtvercové 4:5 příspěvky do feedu přes Canva šablonu, tento skill dělá výhradně vertikální story a vizuál renderuje lokálně přes Chromium (nezávisle na Canva kvótě). Určeno pro Claude Code cloud Routine (Linux, bash/curl/jq/node, žádný interaktivní checkpoint). Použij vždy, když uživatel chce dát článek na story, naplánovat story, udělat 9:16 příspěvek nebo vertikální vizuál. Trigger keywords: agro stories, story z článku, dej to na story, naplánuj story, 9:16 story, vertikální příspěvek, instagram story agro, facebook story agro, tři story denně, stories cloud, story routine."
 ---
 
 # Agro-Stories Cloud Skill
 
 Neinteraktivní varianta pro **Claude Code cloud Routine**. Jedním během:
 
-1. vybere **2 publikované články**, ze kterých ještě story nebyla,
+1. vybere **3 publikované články**, ze kterých ještě story nebyla,
 2. pro každý vyrenderuje **1080×1920 PNG** v brandu ProfiFarmář,
 3. nahraje ho na Cloudinary,
-4. naplánuje přes Buffer **2 story × 2 sítě = 4 posty** — jednu na **08:00**, druhou na **19:00** Europe/Prague.
+4. naplánuje přes Buffer **3 story × 2 sítě = 6 postů** na **07:00**, **12:00** a **18:00**
+   Europe/Prague.
 
-Proč dvě: story na Instagramu i Facebooku žije **24 hodin**. Ranní kryje den, večerní noc a další ráno,
-takže na profilu je pořád aspoň jedna živá — „jdeme vidět po celý den".
+Proč tři: na Profifarmar.cz vychází **každý den nad ránem tři nové články**, a přesně z těch tří se
+dělají story. Tři sloty rozložené přes den drží profil živý od rána do večera a poslední story
+dojíždí až do dalšího poledne (story žije 24 h).
 
 > **Bez kontrolního bodu.** Skill běží autonomně. Nikdy se neptá, jen na konci vypíše shrnutí (Krok 8).
 > Interaktivní feed varianta s potvrzením je `agro-socials-local`.
@@ -28,11 +30,48 @@ takže na profilu je pořád aspoň jedna živá — „jdeme vidět po celý de
 
 ## Vstup — které články
 
-- **Bez upřesnění** (běh z Routine) → vezmi **2 nejnovější `published` články s `cover_image_url`**,
-  které ještě nejsou v `posted-stories-log.json`.
-- **S tématem** → vyber odpovídající články, dedupe proti logu platí pořád.
-- Log je **záměrně oddělený** od `posted-log.json` (feed). Story _smí_ propagovat článek, který už
-  na feedu byl — to je žádoucí. Nesmí se jen zopakovat **story** ze stejného článku.
+Cílem je **3 články, které vyšly dnes nad ránem**. To je běžný stav a tehdy se nic nedomýšlí.
+
+1. **Primárně** vezmi všechny dnešní `published` články s `cover_image_url`, které ještě nejsou
+   v `posted-stories-log.json` (dnešek podle `published_at` v Europe/Prague, ne UTC).
+2. **Když jich je míň než 3** (redakce nestihla, výpadek), doplň zbytek **staršími** články podle
+   pravidel pro sezónní vhodnost níže. Starší článek na story vadit nemusí — vadí jen takový,
+   který je vidět, že je „ze špatného období".
+3. **Když ani po doplnění nejsou 3**, naplánuj kolik jich je (sloty ber odshora: 07:00, pak 12:00,
+   pak 18:00) a napiš to do shrnutí. Nikdy neopakuj článek, který už v logu je.
+4. **S tématem od uživatele** → vyber odpovídající články; dedupe proti logu platí pořád.
+
+Log je **záměrně oddělený** od `posted-log.json` (feed). Story _smí_ propagovat článek, který už
+na feedu byl — to je žádoucí. Nesmí se jen zopakovat **story** ze stejného článku.
+
+### Sezónní vhodnost staršího článku
+
+Otázka, kterou si u každého kandidáta polož: **„Kdyby to někdo viděl dnes, poznal by, že je to
+staré, a působilo by to divně?"** Když ano, přeskoč ho a vezmi dalšího.
+
+**Nedávej na story:**
+
+- Články vázané na **fázi zemědělského roku**, která už je jinde — setí, sklizeň konkrétní plodiny,
+  jarní mrazy, žně, orba, senoseč, vinobraní. („Jarní mrazy poškodily meruňky" v srpnu.)
+- **Počasí a jeho následky** — sucho, povodně, kroupy, vlna veder. Tohle stárne nejrychleji.
+- **Termíny a lhůty** — dotační výzvy, uzávěrky žádostí, přechodná období, „od pondělí platí".
+- Cokoli s **„aktuálně", „tento týden", „právě teď"** v titulku nebo se živým vývojem
+  (protesty, jednání, hlasování), kde už dávno padlo rozhodnutí.
+- **Ceny a trhy** starší než ~2 měsíce — čísla už neplatí.
+
+**Klidně dej na story (stárne pomalu):**
+
+- Historie a kontext (např. „Sedm století rybníkářství na Třeboňsku").
+- Technika a technologie — stroje, roboti, převodovky, senzory.
+- Portréty farem a lidí, reportáže z provozu.
+- Legislativa s dlouhým horizontem (rozpočty na roky dopředu, víceleté programy).
+- Vysvětlovací a přehledové články, agronomické principy.
+
+**Rychlý test podle měsíce:** když je `published_at` staršího článku od dneška vzdálený víc než
+**~6 týdnů** a téma spadá do některé zakázané kategorie výše, zahoď ho. Když je téma z té druhé
+skupiny, stáří nevadí a klidně sáhni i o půl roku zpět.
+
+Když musíš sáhnout po starším článku, **v shrnutí to napiš** — ať je vidět, že dnes nevyšly tři.
 
 **Sdílené proměnné (per článek):**
 
@@ -79,7 +118,7 @@ mergni ji a až pak pokračuj.
 
 ---
 
-## Krok 1 — Vyber 2 články
+## Krok 1 — Vyber 3 články
 
 ```bash
 set -euo pipefail
@@ -89,7 +128,9 @@ curl -sS -m 60 -H "Authorization: Bearer $AI_API_KEY" \
   "https://profifarmar.cz/api/webhook.php" -o /tmp/articles.json
 
 posted_ids=$(jq '[.[].id]' posted-stories-log.json 2>/dev/null || echo "[]")
+dnes=$(TZ="Europe/Prague" date +%Y-%m-%d)
 
+# Všichni nepoužití kandidáti, od nejnovějšího
 jq --argjson posted "$posted_ids" '
   (.data // .)
   | map(select(.status == "published" and .cover_image_url != null))
@@ -97,12 +138,24 @@ jq --argjson posted "$posted_ids" '
   | sort_by(.published_at) | reverse
 ' /tmp/articles.json > /tmp/candidates.json
 
-jq -r '.[:10][] | "\(.published_at)  cat=\(.category_id)  \(.title)"' /tmp/candidates.json
+# published_at má tvar "2026-08-12 15:42:45+02" — pro dnešek stačí prefix data
+jq --arg d "$dnes" '[ .[] | select(.published_at | startswith($d)) ]' \
+  /tmp/candidates.json > /tmp/dnesni.json
+
+echo "dnes ($dnes): $(jq length /tmp/dnesni.json) článků"
+jq -r '.[] | "  DNES   \(.published_at)  cat=\(.category_id)  \(.title)"' /tmp/dnesni.json
+jq -r --arg d "$dnes" '.[] | select(.published_at | startswith($d) | not)
+       | "  starší \(.published_at)  cat=\(.category_id)  \(.title)"' /tmp/candidates.json | head -15
 ```
 
-Z prvních ~10 kandidátů vyber **2**. Přeskoč **sezónní nesoulad** (článek o jarních mrazech nedávej
-na story v září), i kdyby byl novější. Preferuj dva **různé kategorie**, ať ranní a večerní story
-nevypadají stejně.
+**Výběr:**
+
+- Jsou-li dnešní **3**, ber je a nic dalšího neřeš.
+- Je-li jich **míň**, doplň ze seznamu „starší" tolik, aby byly 3 — ale jen ty, které projdou
+  **sezónní vhodností** (viz sekce Vstup). Ber od nejnovějšího a nevhodné přeskakuj.
+- Nejsou-li ani tak 3, naplánuj kolik jich je a uveď to ve shrnutí.
+
+Když máš na výběr, dej přednost **různým kategoriím**, ať tři story za den nevypadají stejně.
 
 ---
 
@@ -219,7 +272,7 @@ vizuál. Proto:
 
 ---
 
-## Krok 6 — Buffer: naplánuj 4 posty
+## Krok 6 — Buffer: naplánuj 6 postů
 
 ```bash
 : "${BUFFER_API_KEY:?}"
@@ -257,7 +310,7 @@ fb_id=$(echo "$channels" | jq -r '.[] | select(.service=="facebook")  | .id')
 ### Časy — DST-safe
 
 ```bash
-compute_due_utc() {        # $1 = "08:00" | "19:00"
+compute_due_utc() {        # $1 = "07:00" | "12:00" | "18:00"
   local now_epoch due_epoch
   now_epoch=$(date -u +%s)
   due_epoch=$(TZ="Europe/Prague" date -d "today $1" +%s)
@@ -265,21 +318,25 @@ compute_due_utc() {        # $1 = "08:00" | "19:00"
   date -u -d "@$due_epoch" +"%Y-%m-%dT%H:%M:%SZ"
 }
 
-due_rano=$(compute_due_utc "08:00")
-due_vecer=$(compute_due_utc "19:00")
+# seřaď chronologicky — při ranním startu Routine vyjdou všechny tři dnes
+mapfile -t sloty < <(for t in "07:00" "12:00" "18:00"; do
+                       echo "$(compute_due_utc "$t")|$t"
+                     done | sort)
+printf 'slot: %s\n' "${sloty[@]}"
 ```
 
-> **Přiřazení článků ke slotům:** seřaď oba časy **chronologicky** a dej **novější článek do
-> dřívějšího slotu**. Podle hodiny, kdy Routine běží, může být dřívější slot kterýkoli z nich —
-> při ranním startu je to `due_rano`, při odpoledním spuštění naopak `due_vecer` (dnes večer),
-> zatímco `due_rano` už spadne na zítřek.
+> **Přiřazení článků ke slotům:** seřaď časy **chronologicky** (to dělá `sort` výše, ISO tvar
+> s `Z` se řadí správně jako text) a dej **novější článek do dřívějšího slotu**. Při ranním
+> startu Routine vyjdou 07:00, 12:00 i 18:00 ještě dnes. Když skill pustíš ručně odpoledne,
+> už proběhlé sloty se posunou na zítřek a `sort` je správně přeskládá dozadu.
 
-> ⚠️ **Musí to jít přes epoch.** `TZ=Europe/Prague date -d "tomorrow 08:00" -u` vrátí `08:00Z`,
-> což je špatně — `-u` přebije zónu i při parsování. Správně je Prague 08:00 = **06:00Z** v létě.
+> ⚠️ **Musí to jít přes epoch.** `TZ=Europe/Prague date -d "tomorrow 07:00" -u` vrátí `07:00Z`,
+> což je špatně — `-u` přebije zónu i při parsování. Správně je Prague 07:00 = **05:00Z** v létě.
 > Nikdy nehardcoduj `+02:00` / `+01:00`, přechod na zimní čas by to rozbil.
 >
-> ⚠️ Routine musí startovat **před 08:00 Prague** (ideálně 05:00–06:00), jinak `compute_due_utc`
-> odsune ranní slot až na zítřek a obě story vyjdou ve špatném pořadí.
+> ⚠️ Routine musí startovat **před 07:00 Prague**, jinak `compute_due_utc` odsune první slot
+> na zítřek a story se rozjedou přes dva dny. Zároveň musí startovat **až po tom, co vyjdou
+> ranní články** — proto 05:00–06:00 Prague.
 
 ### Vytvoření story postu
 
@@ -300,7 +357,7 @@ schedule_story() {   # $1 channel  $2 text  $3 image  $4 alt  $5 dueAt  $6 insta
 }
 ```
 
-Celkem **4 volání**: story 1 → `due_rano` (IG + FB), story 2 → `due_vecer` (IG + FB).
+Celkem **6 volání**: každá ze tří story jde na svůj slot na IG i na FB.
 
 **Povinnosti ověřené proti živému Buffer schématu:**
 
@@ -329,8 +386,9 @@ ho zkusí znovu.
 ```bash
 ts=$(date -u +%Y-%m-%d)
 jq -n --arg ts "$ts" '[
-  {id: "[ID_CLANKU_1]", slug: "[SLUG_1]", posted_at: $ts, slot: "08:00"},
-  {id: "[ID_CLANKU_2]", slug: "[SLUG_2]", posted_at: $ts, slot: "19:00"}
+  {id: "[ID_CLANKU_1]", slug: "[SLUG_1]", posted_at: $ts, slot: "07:00"},
+  {id: "[ID_CLANKU_2]", slug: "[SLUG_2]", posted_at: $ts, slot: "12:00"},
+  {id: "[ID_CLANKU_3]", slug: "[SLUG_3]", posted_at: $ts, slot: "18:00"}
 ]' > /tmp/new_stories.json
 
 jq -s '.[0] + .[1]' posted-stories-log.json /tmp/new_stories.json > /tmp/merged.json
@@ -346,33 +404,54 @@ git push -u origin claude/profifarmář-stories-posts-qvrj8u
 ## Krok 8 — Shrnutí běhu
 
 ```
-✅ AGRO-STORIES — naplánovány 2 story
+✅ AGRO-STORIES — naplánovány 3 story
+   Zdroj: 3 dnešní články        (nebo: 2 dnešní + 1 starší — viz níže)
 
-🌅 RÁNO 08:00 Europe/Prague ([due_rano] UTC)
+🌅 07:00 Europe/Prague ([due] UTC)
    "[TITULEK 1]" ([KATEGORIE 1])
    📸 Instagram story — ID: [post_id] | 🔗 link sticker: [CLANEK_URL 1]
    📘 Facebook story  — ID: [post_id]
    🖼️  [CLOUDINARY_URL 1]
 
-🌆 VEČER 19:00 Europe/Prague ([due_vecer] UTC)
+☀️ 12:00 Europe/Prague ([due] UTC)
    "[TITULEK 2]" ([KATEGORIE 2])
    📸 Instagram story — ID: [post_id] | 🔗 link sticker: [CLANEK_URL 2]
    📘 Facebook story  — ID: [post_id]
    🖼️  [CLOUDINARY_URL 2]
 
-📝 posted-stories-log.json +2 záznamy, pushnuto
+🌆 18:00 Europe/Prague ([due] UTC)
+   "[TITULEK 3]" ([KATEGORIE 3])  ⚠️ starší článek z [DATUM] — dnes vyšly jen 2
+   📸 Instagram story — ID: [post_id] | 🔗 link sticker: [CLANEK_URL 3]
+   📘 Facebook story  — ID: [post_id]
+   🖼️  [CLOUDINARY_URL 3]
+
+📝 posted-stories-log.json +3 záznamy, pushnuto
 ```
+
+Když jsi sáhl po starším článku, **označ to** u dané story (jako u třetí výše) a napiš proč —
+kolik článků dnes vyšlo. Když se nepodařilo naplnit všechny tři sloty, uveď to hned na prvním řádku.
 
 ---
 
 ## Nastavení Routine
 
-- **Cron:** `0 4 * * *` UTC → 06:00 Prague v létě, 05:00 v zimě. Bezpečně před ranním slotem.
+- **Cron:** `0 4 * * *` UTC → 06:00 Prague v létě, 05:00 v zimě. Po ranních článcích a bezpečně
+  před slotem 07:00.
 - **Environment:** `AI_API_KEY`, `BUFFER_API_KEY`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`,
   `CLOUDINARY_API_SECRET`.
-- **Kapacita Bufferu:** free plán má limit **10 naplánovaných postů**. Tento skill přidá 4,
-  `agro-socials-cloud` 6 — dohromady přesně na stropě. Když poběží obojí denně, rozhoď je na různé
-  dny nebo hlídej `list_posts` se `status: ["scheduled"]`.
+- **Kapacita Bufferu:** free plán hlásí v `get_account` limit `scheduledPosts: 10`. Tento skill
+  přidá **6 postů** (3 story × 2 sítě), `agro-socials-cloud` dalších 6 — tj. 12 najednou.
+  Vejde se to jen tehdy, pokud je limit **na kanál** (6 na IG + 6 na FB), ne na celou organizaci.
+  Než pustíš obě Routines denně vedle sebe, ověř to:
+
+  ```bash
+  call_buffer list_posts "$(jq -n --arg o "$org_id" \
+    '{organizationId:$o, status:["scheduled"], limit:50}')" | unwrap \
+  | jq '[.edges[].node.channelService] | group_by(.) | map({(.[0]): length}) | add'
+  ```
+
+  Když některé `create_post` spadne na limit, sniž počet slotů nebo posuň Routines na jiné hodiny,
+  ať se fronty nepřekrývají.
 
 ---
 
@@ -416,5 +495,7 @@ pořadí a **vždy vypiš Cloudinary URL i text**, ať se práce neztratí:
 | `create_post` „projde", ale žádný post nevznikl | Chybu vracíš jako text v `.result.content[0].text`, ne jako `.error` — vždy zkontroluj, jestli odpověď nezačíná `MCP error`, a ne jen `.error` |
 | IG story selže | Přidej `metadata.instagram.shouldShareToFeed` (je povinné i pro story) |
 | FB story selže | `metadata.facebook.type` musí být `"story"` |
-| Story vyšla ve špatný čas | `compute_due_utc` musí počítat přes epoch, ne přes `date -u -d`; Routine musí startovat před 08:00 Prague |
+| Story vyšla ve špatný čas | `compute_due_utc` musí počítat přes epoch, ne přes `date -u -d`; Routine musí startovat mezi 05:00 a 07:00 Prague |
+| Story se rozjely přes dva dny | Routine startovala po 07:00 — první slot se posunul na zítřek. Posuň cron dřív |
+| Na story je článek „ze špatného období" | Sezónní filtr v sekci Vstup se nepoužil. Počasí, sklizeň a termíny se po ~6 týdnech nesmí brát |
 | Buffer hlásí limit naplánovaných postů | Free plán má strop 10 — zkontroluj `list_posts` se `status: ["scheduled"]` a rozhoď Routines na jiné dny |
