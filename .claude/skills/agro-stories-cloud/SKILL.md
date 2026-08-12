@@ -310,7 +310,13 @@ Celkem **4 volání**: story 1 → `due_rano` (IG + FB), story 2 → `due_vecer`
 | `metadata.instagram.link` | URL link stickeru — jen Instagram, Facebook ho nemá |
 | `metadata.facebook.type` | enum je `post` \| `reel` \| `story` — pro story `"story"` |
 | `assets` | musí zůstat **pole** objektů `{ image: { url, metadata: { altText } } }` |
+| `schedulingType` | **povinné vždy**, i při `mode: "shareNow"` — je v `required` u nástroje. Bez něj přijde `Invalid option: expected one of "notification"\|"automatic"` |
 | `Accept` hlavička | `text/event-stream, application/json`, jinak **406** |
+
+> **Okamžitá publikace.** Když chceš story ven hned (ruční běh, ne Routine), nahraď
+> `mode: "customScheduled"` + `dueAt` za `mode: "shareNow"` — `schedulingType: "automatic"`
+> tam ale **nech**. Odpověď se vrátí se `status: "sent"` (Instagram) nebo `"sending"` (Facebook,
+> dojede za pár sekund) a v poli `externalLink` je přímý odkaz na hotovou story.
 
 ---
 
@@ -405,6 +411,8 @@ pořadí a **vždy vypiš Cloudinary URL i text**, ať se práce neztratí:
 | Buffer **406 Not Acceptable** | Chybí hlavička `Accept: text/event-stream, application/json` |
 | Buffer odpověď nejde naparsovat | Někdy je to čistý JSON, jindy SSE — payload je vždy v `.result.content[0].text` |
 | `list_channels` chce `organizationId` | Získej ho z `get_account` → `.organizations[0].id` |
+| `Invalid option: expected one of "notification"\|"automatic"` | Chybí `schedulingType` — je povinné i u `mode: "shareNow"` |
+| `create_post` „projde", ale žádný post nevznikl | Chybu vracíš jako text v `.result.content[0].text`, ne jako `.error` — vždy zkontroluj, jestli odpověď nezačíná `MCP error`, a ne jen `.error` |
 | IG story selže | Přidej `metadata.instagram.shouldShareToFeed` (je povinné i pro story) |
 | FB story selže | `metadata.facebook.type` musí být `"story"` |
 | Story vyšla ve špatný čas | `compute_due_utc` musí počítat přes epoch, ne přes `date -u -d`; Routine musí startovat před 08:00 Prague |
