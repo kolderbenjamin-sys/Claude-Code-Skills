@@ -1,10 +1,5 @@
 ---
 name: agro-journalist
-description: "Tento skill použij vždy, když uživatel chce napsat zemědělské zpravodajské články, provést rešerši ze zemědělských zdrojů, vytvořit obsah pro agroweb nebo uložit hotové články do Google Drive. Trigger keywords: agro článek, napiš článek, zpravodajství ze zemědělství, write agro, agroweb, zemědělské novinky, rešerše agro, články z agrowebu, zdroje z google disku, nová várka článků, piš články, nové články. Pokud se uživatel zmíní o psaní, rešerši nebo tvorbě zemědělských zpravodajských textů — vždy aktivuj tento skill."
----
-
----
-name: agro-journalist
 description: >
   Tento skill použij vždy, když uživatel chce napsat zemědělské zpravodajské články,
   provést rešerši ze zemědělských zdrojů, vytvořit obsah pro agroweb nebo uložit
