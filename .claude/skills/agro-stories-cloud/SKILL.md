@@ -347,26 +347,61 @@ printf 'slot: %s\n' "${sloty[@]}"
 > na zítřek a story se rozjedou přes dva dny. Zároveň musí startovat **až po tom, co vyjdou
 > ranní články** — proto 05:00–06:00 Prague.
 
-### Vytvoření story postu
+### Vytvoření story postu — s automatickým únikem přes `shareNow`
+
+Fronta naplánovaných postů má na free plánu strop 10. Když do něj narazíš, **story se nezahazuje** —
+pošle se rovnou ven přes `shareNow`. U story to nevadí: žijí 24 h, je běžné mít jich na profilu
+několik za sebou, a lepší je vydaná story v nevhodnou hodinu než žádná.
 
 ```bash
-schedule_story() {   # $1 channel  $2 text  $3 image  $4 alt  $5 dueAt  $6 instagram|facebook  $7 clanek_url
-  local meta args
+create_story() {   # $1 channel  $2 text  $3 image  $4 alt  $5 dueAt  $6 instagram|facebook  $7 clanek_url
+  local meta base out
   if [ "$6" = "instagram" ]; then
     meta=$(jq -n --arg l "$7" '{instagram:{type:"story",shouldShareToFeed:false,link:$l}}')
   else
     meta='{"facebook":{"type":"story"}}'
   fi
-  args=$(jq -n --arg ch "$1" --arg t "$2" --arg u "$3" --arg a "$4" --arg d "$5" --argjson m "$meta" '
+  base=$(jq -n --arg ch "$1" --arg t "$2" --arg u "$3" --arg a "$4" --argjson m "$meta" '
     { channelId: $ch, text: $t,
       assets: [ { image: { url: $u, metadata: { altText: $a } } } ],
-      mode: "customScheduled", schedulingType: "automatic", dueAt: $d,
-      metadata: $m }')
-  call_buffer create_post "$args" | unwrap
+      schedulingType: "automatic", metadata: $m }')
+
+  # 1. pokus — na svůj slot
+  out=$(call_buffer create_post \
+        "$(jq -n --argjson b "$base" --arg d "$5" '$b + {mode:"customScheduled", dueAt:$d}')" | unwrap)
+
+  # 2. pokus — jen když to vypadá na limit fronty, jinak chybu vrať tak jak je
+  if printf '%s' "$out" | grep -qiE 'limit|quota|maximum|too many|upgrade|plan'; then
+    echo "  ⚠ slot $5 zamítnut (plná fronta) — posílám rovnou přes shareNow" >&2
+    out=$(call_buffer create_post \
+          "$(jq -n --argjson b "$base" '$b + {mode:"shareNow"}')" | unwrap)
+    printf '%s' "$out" | jq -c '. + {_fallback:"shareNow"}' 2>/dev/null || printf '%s' "$out"
+    return
+  fi
+  printf '%s' "$out"
 }
 ```
 
 Celkem **6 volání**: každá ze tří story jde na svůj slot na IG i na FB.
+
+> **Kdy fallback nespustit.** Na `shareNow` přepínej **jen při chybě, která vypadá na limit**.
+> Kdyby ses přepnul při každé chybě, rozbitá URL obrázku nebo špatné `metadata` by skončily
+> okamžitě publikovanou vadnou story. Cokoli jiného než limit nahlaš a ten jeden post vynech.
+>
+> **Co to udělá s časem.** `shareNow` odešle story hned, ne v 12:00 nebo v 18:00. Rozložení přes
+> den se tím u toho jednoho postu ztrácí. **Vždy to napiš do shrnutí** (Krok 8) a v logu ulož
+> `slot` jako `shareNow (fallback)`, ať je zpětně poznat, proč story vyšla mimo plán.
+
+**Kontrola kapacity předem** (levnější než narazit uprostřed):
+
+```bash
+volno=$(call_buffer list_posts "$(jq -n --arg o "$org_id" \
+          '{organizationId:$o, status:["scheduled"], limit:50}')" | unwrap \
+        | jq '[.edges[].node.channelService] | group_by(.) | map({(.[0]): length}) | add')
+echo "ve frontě: $volno"
+```
+
+Když už tam je blízko 10, počítej s tím, že část story půjde přes `shareNow`, a nediv se tomu.
 
 **Povinnosti ověřené proti živému Buffer schématu:**
 
@@ -404,6 +439,7 @@ jq -n --arg ts "$ts" '[
   {id: "[ID_CLANKU_2]", slug: "[SLUG_2]", posted_at: $ts, slot: "12:00"},
   {id: "[ID_CLANKU_3]", slug: "[SLUG_3]", posted_at: $ts, slot: "18:00"}
 ]' > /tmp/new_stories.json
+# u story, která šla přes únikový shareNow, ulož slot jako "shareNow (fallback)"
 
 jq -s '.[0] + .[1]' posted-stories-log.json /tmp/new_stories.json > /tmp/merged.json
 mv /tmp/merged.json posted-stories-log.json
@@ -433,7 +469,7 @@ git push -u origin claude/profifarmář-stories-posts-qvrj8u
    📘 Facebook story  — ID: [post_id]
    🖼️  [CLOUDINARY_URL 2]
 
-🌆 18:00 Europe/Prague ([due] UTC)
+🌆 18:00 Europe/Prague — ⚠️ ODESLÁNO IHNED, fronta byla plná
    "[TITULEK 3]" ([KATEGORIE 3])  ⚠️ starší článek z [DATUM] — dnes vyšly jen 2
    📸 Instagram story — ID: [post_id] | 🔗 link sticker: [CLANEK_URL 3]
    📘 Facebook story  — ID: [post_id]
@@ -442,8 +478,13 @@ git push -u origin claude/profifarmář-stories-posts-qvrj8u
 📝 posted-stories-log.json +3 záznamy, pushnuto
 ```
 
-Když jsi sáhl po starším článku, **označ to** u dané story (jako u třetí výše) a napiš proč —
-kolik článků dnes vyšlo. Když se nepodařilo naplnit všechny tři sloty, uveď to hned na prvním řádku.
+Dvě věci se ve shrnutí **musí** objevit, jinak zůstanou skryté:
+
+- **starší článek** → označ u dané story a napiš, kolik článků dnes vyšlo (viz třetí výše);
+- **únik přes `shareNow`** → napiš u slotu, že story šla ven ihned místo v plánovanou hodinu,
+  protože fronta byla plná (viz třetí výše).
+
+Když se nepodařilo naplnit všechny tři sloty, uveď to hned na prvním řádku.
 
 ---
 
@@ -454,18 +495,17 @@ kolik článků dnes vyšlo. Když se nepodařilo naplnit všechny tři sloty, u
 - **Environment:** `AI_API_KEY`, `BUFFER_API_KEY`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`,
   `CLOUDINARY_API_SECRET`.
 - **Kapacita Bufferu:** free plán hlásí v `get_account` limit `scheduledPosts: 10`. Tento skill
-  přidá **6 postů** (3 story × 2 sítě), `agro-socials-cloud` dalších 6 — tj. 12 najednou.
-  Vejde se to jen tehdy, pokud je limit **na kanál** (6 na IG + 6 na FB), ne na celou organizaci.
-  Než pustíš obě Routines denně vedle sebe, ověř to:
+  přidá 6 postů (3 story × 2 sítě), feedová `agro-socials-cloud` další 4 (2 články × 2 sítě) —
+  dohromady přesně 10, tedy 5 na kanál. Fronta se do toho vejde, ale rezerva je nulová.
+  Jestli se limit počítá **na organizaci nebo na kanál, zatím nevíme** — dosud na něj nikdy
+  nedošlo, takže žádné zamítnutí není čím změřit.
 
-  ```bash
-  call_buffer list_posts "$(jq -n --arg o "$org_id" \
-    '{organizationId:$o, status:["scheduled"], limit:50}')" | unwrap \
-  | jq '[.edges[].node.channelService] | group_by(.) | map({(.[0]): length}) | add'
-  ```
+  **Limit už ale běh nezablokuje.** Když `customScheduled` narazí na strop, `create_story`
+  pošle danou story rovnou ven přes `shareNow` (viz Krok 6) — u story to nevadí, žijí 24 h
+  a víc jich za sebou je běžné. Jediná cena je ztráta plánované hodiny, což se hlásí ve shrnutí.
 
-  Když některé `create_post` spadne na limit, sniž počet slotů nebo posuň Routines na jiné hodiny,
-  ať se fronty nepřekrývají.
+  Kdyby to začalo přetékat pravidelně, nejčistší je posunout Routines dál od sebe, ať se fronty
+  nepřekrývají, nebo snížit počet feedových článků.
 
 ---
 
