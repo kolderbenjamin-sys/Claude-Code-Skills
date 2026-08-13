@@ -1,10 +1,5 @@
 ---
 name: agro-journalist
-description: "Tento skill použij vždy, když uživatel chce napsat zemědělské zpravodajské články, provést rešerši ze zemědělských zdrojů, vytvořit obsah pro agroweb nebo uložit hotové články do Google Drive. Trigger keywords: agro článek, napiš článek, zpravodajství ze zemědělství, write agro, agroweb, zemědělské novinky, rešerše agro, články z agrowebu, zdroje z google disku, nová várka článků, piš články, nové články. Pokud se uživatel zmíní o psaní, rešerši nebo tvorbě zemědělských zpravodajských textů — vždy aktivuj tento skill."
----
-
----
-name: agro-journalist
 description: >
   Tento skill použij vždy, když uživatel chce napsat zemědělské zpravodajské články,
   provést rešerši ze zemědělských zdrojů, vytvořit obsah pro agroweb nebo uložit
@@ -114,7 +109,7 @@ Pro každé ze 3 témat:
 Napiš 3 články. Každý musí mít **přesně tuto strukturu** (viz vzor níže):
 
 1. **Nadpis** — v kurzívě (`*Nadpis*`), výsledek nebo událost, ne otázka
-2. **Perex** — 1–2 věty shrnující článek. Plynulý text, ne bullet body. BEZ HTML tagů. Toto se na webu zobrazuje jako samostatný blok pod nadpisem — nesmí se opakovat v těle.
+2. **Perex** — 1–2 věty shrnující článek. Plynulý text v souvislých větách, žádné odrážky. BEZ HTML tagů. Toto se na webu zobrazuje jako samostatný blok pod nadpisem — nesmí se opakovat v těle.
 3. **Tělo článku** — **200–400 slov**, 3–4 odstavce s podnadpisy, přítomný nebo minulý čas
 4. **Zdroje** — klikatelné HTML odkazy, ne surové URL
 
@@ -129,7 +124,7 @@ Napiš 3 články. Každý musí mít **přesně tuto strukturu** (viz vzor ní�
 
 **Pole `body` = čisté HTML, žádný markdown.** Web tyto značky nezpracovává a zobrazuje je jako surový text.
 
-**Perex NIKDY nevkládej do body.** Body začíná bullet body, ne perexem. Jinak se perex na webu zobrazí dvakrát.
+**Perex NIKDY nevkládej do body.** Body začíná prvním podnadpisem `<h2>`, ne perexem. Jinak se perex na webu zobrazí dvakrát.
 
 **Datum do body nevkládej** — řeší ho CMS automaticky.
 
@@ -207,9 +202,9 @@ PEREX: Americká firma NEXAT dosáhla v Brazílii nového světového rekordu ve
 
 ### Checklist před uložením
 
-1. `body` (vše od bullet bodů po zdroje) = čisté HTML, žádný markdown
+1. `body` (vše od prvního podnadpisu po zdroje) = čisté HTML, žádný markdown
 2. `perex` = samostatný řádek s prefixem `PEREX:`, plynulý text, BEZ HTML tagů
-3. `body` začíná bullet body (`<p><strong>`), ne perexem
+3. `body` začíná podnadpisem `<h2>`, ne perexem
 4. Podnadpisy = `<h2>`, odstavce = `<p>`
 5. Zdroje = klikatelné `<a href="plná-url">doména.cz</a>`
 6. Datum se do body nevkládá (řeší CMS)
