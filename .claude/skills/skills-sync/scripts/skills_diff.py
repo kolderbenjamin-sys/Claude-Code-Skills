@@ -134,6 +134,13 @@ def branch_survey(repo: Path) -> dict:
         ref = ref.strip()
         if not ref or ref.endswith("/HEAD"):
             continue
+        # Už smergovaná větev nenese nic navíc – její starší strom není rozdíl.
+        merged = subprocess.run(
+            ["git", "-C", str(repo), "merge-base", "--is-ancestor", ref, "HEAD"],
+            capture_output=True, timeout=30,
+        ).returncode == 0
+        if merged:
+            continue
         tree = git(repo, "rev-parse", f"{ref}:{REPO_SKILLS_SUBDIR}")
         if tree and here and tree != here:
             last = git(repo, "log", "-1", "--format=%ci  %s", ref, "--", str(REPO_SKILLS_SUBDIR))
