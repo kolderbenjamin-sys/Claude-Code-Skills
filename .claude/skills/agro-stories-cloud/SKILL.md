@@ -108,13 +108,22 @@ LISTOPAD, PROSINEC.
 
 ---
 
-## Krok 0 — Mergni zbylou PR z minulého běhu
+## Krok 0 — Srovnej se na aktuální stav větve
 
-`posted-stories-log.json` se commituje na větev `claude/…`, ne rovnou do `main`. Když PR z minulého
-běhu zůstane nemergnutá, tento běh uvidí zastaralý log a vybral by **stejné články znovu**.
+Skill i `posted-stories-log.json` žijí na větvi `claude/profifarmář-stories-posts-qvrj8u`,
+**ne v `main`**. Každý běh musí začít od jejího posledního stavu, jinak uvidí zastaralý log
+a vybral by **stejné články znovu**.
 
-Zkontroluj otevřené PR z větve `claude/*` do `main`. Pokud existuje a `mergeable_state` je `clean`,
-mergni ji a až pak pokračuj.
+```bash
+BRANCH="claude/profifarmář-stories-posts-qvrj8u"
+git fetch origin "$BRANCH"
+git checkout -B "$BRANCH" "origin/$BRANCH"
+jq length posted-stories-log.json    # kolik story už proběhlo
+```
+
+> Kdyby se skill někdy mergnul do `main` a log se přesunul tam, nahraď tenhle krok
+> `git pull origin main` a v Kroku 7 pushuj do `main`. Dokud to tak není, **nepracuj na `main`**
+> a **nezakládej pull request** — běh si vystačí s vlastní větví.
 
 ---
 
