@@ -106,15 +106,43 @@ def collect_skills(root: Path) -> dict[str, Path]:
     return found
 
 
-def git_remote_url(path: Path) -> str | None:
+def git(path: Path, *args: str) -> str | None:
     try:
         out = subprocess.run(
-            ["git", "-C", str(path), "remote", "get-url", "origin"],
-            capture_output=True, text=True, timeout=15,
+            ["git", "-C", str(path), *args], capture_output=True, text=True, timeout=30
         )
     except (OSError, subprocess.SubprocessError):
         return None
     return out.stdout.strip() if out.returncode == 0 else None
+
+
+def git_remote_url(path: Path) -> str | None:
+    return git(path, "remote", "get-url", "origin")
+
+
+def branch_survey(repo: Path) -> dict:
+    """Zjistí, jestli některá jiná větev nemá jiný obsah .claude/skills než ta aktuální.
+
+    Bez tohohle by se porovnávalo proti náhodně checknuté větvi a rozdíl by se
+    přičetl lokálním skillům, i když jde jen o rozvětvenou historii repa.
+    """
+    current = git(repo, "rev-parse", "--abbrev-ref", "HEAD") or "?"
+    here = git(repo, "rev-parse", f"HEAD:{REPO_SKILLS_SUBDIR}")
+    listing = git(repo, "for-each-ref", "--format=%(refname:short)", "refs/remotes/origin")
+    others = []
+    for ref in (listing or "").splitlines():
+        ref = ref.strip()
+        if not ref or ref.endswith("/HEAD"):
+            continue
+        tree = git(repo, "rev-parse", f"{ref}:{REPO_SKILLS_SUBDIR}")
+        if tree and here and tree != here:
+            last = git(repo, "log", "-1", "--format=%ci  %s", ref, "--", str(REPO_SKILLS_SUBDIR))
+            others.append({"ref": ref, "tree": tree, "last_change": last or ""})
+    return {
+        "current_branch": current,
+        "skills_tree": here,
+        "divergent_branches": others,
+    }
 
 
 def slug_matches(url: str, slug: str) -> bool:
@@ -243,6 +271,7 @@ def build_report(args) -> dict:
     return {
         "local_roots": [str(r) for r in roots],
         "repo_root": str(repo_root) if repo_root else None,
+        "git": branch_survey(repo_root) if repo_root else None,
         "repo_skills_dir": str(repo_root / REPO_SKILLS_SUBDIR) if repo_root else None,
         "manifest_found": bool(sources),
         "duplicates": duplicates,
@@ -262,7 +291,17 @@ LABELS = {
 def print_human(report: dict) -> None:
     print(f"Lokální kořeny : {', '.join(report['local_roots']) or '(žádný)'}")
     print(f"Repo           : {report['repo_root'] or '(NENALEZENO)'}")
+    g = report.get("git")
+    if g:
+        print(f"Větev          : {g['current_branch']}")
     print(f"manifest.json  : {'ano' if report['manifest_found'] else 'ne (použita heuristika)'}")
+    if g and g["divergent_branches"]:
+        print(
+            "\nPozor – jiné větve mají jiný obsah .claude/skills. Porovnává se jen"
+            "\nproti aktuální větvi, takže rozdíl níže může pocházet odsud:"
+        )
+        for b in g["divergent_branches"]:
+            print(f"  {b['ref']}  (poslední změna skillů: {b['last_change']})")
     if report["duplicates"]:
         print("\nPozor – skill je ve více lokálních kořenech, použit ten první:")
         for d in report["duplicates"]:

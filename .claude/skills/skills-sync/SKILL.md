@@ -70,6 +70,19 @@ cd <klon> && git checkout main && git pull origin main
 Pokud `main` neexistuje nebo má repo jinou výchozí větev, zjisti ji:
 `git symbolic-ref --short refs/remotes/origin/HEAD`.
 
+**Vždycky napřed `git fetch origin`.** Porovnává se proti checknuté větvi, a v
+tomhle repu je běžné, že skilly upravila jiná session ve své vlastní větvi.
+Skript takové větve najde sám a vypíše je v sekci „Pozor – jiné větve…". Když
+se tam něco objeví, ověř to dřív, než začneš cokoli přepisovat:
+
+```bash
+git diff HEAD origin/<druhá-větev> -- .claude/skills
+```
+
+Rozdíl, který sedí na cizí větev, **není** rozdíl mezi lokálem a GitHubem — je
+to jen rozvětvená historie. V takovém případě nejdřív dostaň chybějící commit
+do své větve (merge / cherry-pick) a teprve pak porovnávej skilly.
+
 ### 2. Vypiš rozdíly
 
 ```bash
@@ -171,3 +184,8 @@ Když se něco zapsalo do `synced/`, zopakuj varování z úvodu.
   jednu z kopií smazat, jinak nebude jasné, která se používá.
 - **Změna je jen v datu/verzi v `metadata`.** Ber jako běžný rozdíl, ale zmiň to
   — často stačí vzít novější verzi.
+- **„Rozdíl", který ve skutečnosti leží v jiné větvi.** Uživatel skill upravil
+  mimo tuhle session, jiná session ho pushla do své větve a ta se nikdy
+  nesmergovala. Poznáš to podle varování o větvích nahoře. Neber to jako rozdíl
+  lokál vs. GitHub a hlavně nic nepřepisuj — nejdřív si vyjasni, která větev má
+  platit.

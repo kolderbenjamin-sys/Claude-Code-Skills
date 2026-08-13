@@ -110,9 +110,8 @@ Napiš 3 články. Každý musí mít **přesně tuto strukturu** (viz vzor ní�
 
 1. **Nadpis** — v kurzívě (`*Nadpis*`), výsledek nebo událost, ne otázka
 2. **Perex** — 1–2 věty shrnující článek. Plynulý text, ne bullet body. BEZ HTML tagů. Toto se na webu zobrazuje jako samostatný blok pod nadpisem — nesmí se opakovat v těle.
-3. **Bullet bod** — přesně 1,  s konkrétním číslem nebo faktem. Tyto jdou do těla článku (ne do perexu).
-4. **Tělo článku** — **200–400 slov**, 3–4 odstavce s podnadpisy, přítomný nebo minulý čas
-5. **Zdroje** — klikatelné HTML odkazy, ne surové URL
+3. **Tělo článku** — **200–400 slov**, 3–4 odstavce s podnadpisy, přítomný nebo minulý čas
+4. **Zdroje** — klikatelné HTML odkazy, ne surové URL
 
 **Formátovací pravidla (web Profifarmar nezpracovává markdown):**
 
@@ -120,7 +119,6 @@ Napiš 3 články. Každý musí mít **přesně tuto strukturu** (viz vzor ní�
 |---|---|---|
 | Podnadpis | `## Podnadpis` | `<h2>Podnadpis</h2>` |
 | Odstavec | holý text | `<p>Text odstavce.</p>` |
-| Bullet bod | `* Text` nebo `• Text` | `<p><strong>Text bodu</strong></p>` |
 | Kurzíva | `*text*` | `<em>text</em>` |
 | Zdroje | surové URL | `<a href="plná-url">doména.cz</a>` |
 
@@ -185,8 +183,6 @@ Po uložení zaznamenej výsledek do logu:
 *V brazilském státě Bahia padl nový světový rekord ve sklizni sóji*
 
 PEREX: Americká firma NEXAT dosáhla v Brazílii nového světového rekordu ve sklizni sóji — 637 tun za 8 hodin. Klíčem byl inovativní modul NEXCO se spotřebou pouhých 7,5 l/ha.
-
-<p><strong>Rekordní sklizeň 637,76 tun sóji za 8 hodin díky inovativnímu modulu NEXCO.</strong></p>
 
 <h2>Nový rekord v brazilské Bahii</h2>
 <p>V brazilském státě Bahia padl nový světový rekord ve sklizni sóji. Americká firma NEXAT představila modul NEXCO, který umožnil průlomový výsledek v oblasti sklizňové techniky.</p>
