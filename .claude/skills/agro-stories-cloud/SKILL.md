@@ -108,22 +108,19 @@ LISTOPAD, PROSINEC.
 
 ---
 
-## Krok 0 — Srovnej se na aktuální stav větve
+## Krok 0 — Srovnej se na aktuální stav `main`
 
-Skill i `posted-stories-log.json` žijí na větvi `claude/profifarmář-stories-posts-qvrj8u`,
-**ne v `main`**. Každý běh musí začít od jejího posledního stavu, jinak uvidí zastaralý log
-a vybral by **stejné články znovu**.
+Skill i `posted-stories-log.json` žijí v `main`. Každý běh musí začít od jejího
+posledního stavu, jinak uvidí zastaralý log a vybral by **stejné články znovu**.
 
 ```bash
-BRANCH="claude/profifarmář-stories-posts-qvrj8u"
-git fetch origin "$BRANCH"
-git checkout -B "$BRANCH" "origin/$BRANCH"
+git fetch origin main
+git checkout -B main origin/main
 jq length posted-stories-log.json    # kolik story už proběhlo
 ```
 
-> Kdyby se skill někdy mergnul do `main` a log se přesunul tam, nahraď tenhle krok
-> `git pull origin main` a v Kroku 7 pushuj do `main`. Dokud to tak není, **nepracuj na `main`**
-> a **nezakládej pull request** — běh si vystačí s vlastní větví.
+> Log se zapisuje přímo do `main` (Krok 7) — **nezakládej pull request** ani
+> vlastní větev. Běh je čistě přírůstkový zápis do logu, žádná revize není potřeba.
 
 ---
 
@@ -446,7 +443,7 @@ mv /tmp/merged.json posted-stories-log.json
 
 git add posted-stories-log.json
 git commit -m "agro-stories-cloud: naplánovány story $(date -u +%Y-%m-%d)"
-git push -u origin claude/profifarmář-stories-posts-qvrj8u
+git push origin main
 ```
 
 ---
