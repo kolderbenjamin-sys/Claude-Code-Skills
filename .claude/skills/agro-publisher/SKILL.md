@@ -85,7 +85,7 @@ Vytvoří nový článek v databázi.
 $payload = @{
     title       = "Název článku"
     perex       = "Perex max 300 znaků."
-    body        = "<p><strong>Bullet bod.</strong></p><h2>Podnadpis</h2><p>Obsah v HTML.</p>"
+    body        = "<h2>Podnadpis</h2><p>Obsah v HTML.</p>"
     category_id = 1
     tags        = @("tag1","tag2","tag3")
     status      = "draft"
@@ -192,9 +192,6 @@ Každý blok má tuto strukturu:
 
 PEREX: 1–2 věty shrnující článek.
 
-<p><strong>Bullet bod 1.</strong></p>
-<p><strong>Bullet bod 2.</strong></p>
-
 <h2>Podnadpis</h2>
 <p>Text odstavce...</p>
 
@@ -222,13 +219,12 @@ Z každého bloku extrahuj tato pole a **striktně dodrž, co kam patří**:
 | Řádek s datem (`DD. MM. RRRR`) | **nikam** | Úplně ignoruj, do API neposílej |
 | Řádek `PEREX: ...` | `perex` | Odstraň prefix `PEREX:`, ponech jen text. BEZ HTML tagů. |
 | Pokud PEREX řádek chybí a jsou 2 řádky `* ...` | `perex` | Spoj do 1–2 vět, max 300 znaků. Fallback pro starý formát. |
-| `<p><strong>Bullet body</strong></p>` | `body` (na začátek) | Bullet body patří do body, NE do perexu |
-| Pokud bullet body jsou v markdown (`* ...`) | `body` (na začátek) | Převeď na `<p><strong>text</strong></p>` |
-| `<h2>` sekce + `<p>` odstavce | `body` (za bullet body) | Už jsou HTML, nebo převeď z `##` |
+| `<h2>` sekce + `<p>` odstavce | `body` (od začátku) | Už jsou HTML, nebo převeď z `##` |
+| Odrážky (`<p><strong>…</strong></p>` nebo `* …`) — **jen u starších článků** | `body` (na začátek) | Zachovej tak, jak jsou; markdown převeď na `<p><strong>text</strong></p>`. Do `perex` NIKDY. |
 | `<p><em>Zdroje:</em> <a href=...>` | `body` (na konec) | Už jsou HTML, nebo převeď surové URL na `<a>` |
 | Surové URL za `*Zdroje:*` | `body` (na konec) | Převeď: `<p><em>Zdroje:</em> <a href="url">domena.cz</a></p>` |
 
-**Proč na tom záleží:** Web Profifarmar.cz zobrazuje `perex` jako odděleně stylovaný blok s jiným typem písma a žlutou čarou hned pod nadpisem. Pokud by bullet body skončily i v `perex`, zobrazí se duplicitně. Datum ve `body` vytvoří ošklivý artefakt na začátku článku. Markdown značky se zobrazují jako surový text.
+**Proč na tom záleží:** Web Profifarmar.cz zobrazuje `perex` jako odděleně stylovaný blok s jiným typem písma a žlutou čarou hned pod nadpisem. Pokud by se text z `body` zopakoval i v `perex`, zobrazí se duplicitně. Datum ve `body` vytvoří ošklivý artefakt na začátku článku. Markdown značky se zobrazují jako surový text.
 
 **Kontrola diakritiky:** Pokud text zdroje neobsahuje diakritiku, doplň ji před odesláním. Celý text musí být správně česky.
 
@@ -242,14 +238,11 @@ Pro každý článek připrav JSON payload:
 
 **`title`** — nadpis (ideálně 60–80 znaků), výsledek nebo událost, ne otázka
 
-**`perex`** — 1–2 věty, max 300 znaků, plynulý text. BEZ HTML tagů, BEZ bullet bodů. Toto je **jediné** místo pro perex — do `body` ho nedávej.
+**`perex`** — 1–2 věty, max 300 znaků, plynulý text. BEZ HTML tagů, BEZ odrážek. Toto je **jediné** místo pro perex — do `body` ho nedávej.
 
-**`body`** — čisté HTML, **začíná bullet body**, pak sekce s podnadpisy, na konci zdroje:
+**`body`** — čisté HTML, **začíná prvním podnadpisem**, pak sekce s odstavci, na konci zdroje:
 
 ```html
-<p><strong>Bullet bod 1 s konkrétním číslem nebo faktem.</strong></p>
-<p><strong>Bullet bod 2 s konkrétním číslem nebo faktem.</strong></p>
-
 <h2>Podnadpis prvního odstavce</h2>
 <p>Text prvního odstavce...</p>
 
@@ -266,7 +259,7 @@ Pro každý článek připrav JSON payload:
 1. Žádný markdown (žádné `##`, `*`, `•`)
 2. Žádný perex (ten je v samostatném poli)
 3. Žádné datum (řeší CMS)
-4. Začíná `<p><strong>` bullet body
+4. Začíná podnadpisem `<h2>`
 5. Podnadpisy = `<h2>`, odstavce = `<p>`
 6. Zdroje = klikatelné `<a href="plná-url">doména.cz</a>` (text = doména bez `www.`)
 
@@ -294,8 +287,8 @@ Pro každý článek připrav JSON payload:
   "title": "Nadpis článku — výsledek nebo událost, ne otázka",
   "category_id": 3,
   "status": "draft",
-  "perex": "1–2 věty shrnující článek. Plynulý text, ne bullet body. BEZ HTML tagů.",
-  "body": "<p><strong>Bullet 1...</strong></p>\n<p><strong>Bullet 2...</strong></p>\n\n<h2>Podnadpis</h2>\n<p>Odstavec...</p>\n\n<p><em>Zdroje:</em> <a href=\"url\">domena.cz</a></p>"
+  "perex": "1–2 věty shrnující článek. Plynulý text, žádné odrážky. BEZ HTML tagů.",
+  "body": "<h2>Podnadpis</h2>\n<p>Odstavec...</p>\n\n<p><em>Zdroje:</em> <a href=\"url\">domena.cz</a></p>"
 }
 ```
 
