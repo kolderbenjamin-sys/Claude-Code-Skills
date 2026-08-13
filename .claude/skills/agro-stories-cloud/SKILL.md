@@ -384,6 +384,11 @@ Celkem **6 volání**: každá ze tří story jde na svůj slot na IG i na FB.
 > `mode: "customScheduled"` + `dueAt` za `mode: "shareNow"` — `schedulingType: "automatic"`
 > tam ale **nech**. Odpověď se vrátí se `status: "sent"` (Instagram) nebo `"sending"` (Facebook,
 > dojede za pár sekund) a v poli `externalLink` je přímý odkaz na hotovou story.
+>
+> **`shareNow` limit fronty obchází.** Ověřeno 13. 8. 2026 na plné frontě 10/10 (5 na kanál):
+> oba `shareNow` posty prošly a odešly, a fronta zůstala na 10 — okamžitá publikace se do
+> `scheduledPosts` vůbec nepočítá. Když ti tedy `customScheduled` spadne na limit, `shareNow`
+> je funkční únik: post jde ven hned, jen nad ním ztrácíš kontrolu nad časem.
 
 ---
 
@@ -507,4 +512,4 @@ pořadí a **vždy vypiš Cloudinary URL i text**, ať se práce neztratí:
 | Story vyšla ve špatný čas | `compute_due_utc` musí počítat přes epoch, ne přes `date -u -d`; Routine musí startovat mezi 05:00 a 07:00 Prague |
 | Story se rozjely přes dva dny | Routine startovala po 07:00 — první slot se posunul na zítřek. Posuň cron dřív |
 | Na story je článek „ze špatného období" | Sezónní filtr v sekci Vstup se nepoužil. Počasí, sklizeň a termíny se po ~6 týdnech nesmí brát |
-| Buffer hlásí limit naplánovaných postů | Free plán má strop 10 — zkontroluj `list_posts` se `status: ["scheduled"]` a rozhoď Routines na jiné dny |
+| Buffer hlásí limit naplánovaných postů | Free plán má strop 10 na naplánované posty — zkontroluj `list_posts` se `status: ["scheduled"]`. Limit platí jen na frontu: `mode: "shareNow"` projde i při 10/10 (ověřeno), takže poslední story se dá poslat rovnou ven |
