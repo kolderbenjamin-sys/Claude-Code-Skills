@@ -22,7 +22,7 @@ dojíždí až do dalšího poledne (story žije 24 h).
 
 > **Vizuál se nedělá v Canvě.** Free Canva účet má vyčerpanou kvótu na `resize-design` i `export-design`,
 > takže 9:16 šablonu v Canvě nelze vyrobit ani exportovat. Story se proto renderují lokálně přes
-> Chromium (`scripts/render-story.mjs`) — barvy, písma i logo jsou vytažené přímo ze 4:5 šablony
+> Chromium (`scripts/render-story.mjs`) — barvy i písma jsou odměřené přímo z reálného 4:5 příspěvku
 > `DAHOBdpJ1tk`, takže story a feed vypadají jako jedna rodina. Renderer navíc nemá žádnou kvótu,
 > běží offline a pro stejný vstup vrací stejný výstup, což je pro nehlídanou Routine zásadní.
 
@@ -82,7 +82,7 @@ staré, a působilo by to divně?"** Když ano, přeskoč ho a vezmi dalšího.
 **~6 týdnů** a téma spadá do některé zakázané kategorie výše, zahoď ho. Když je téma z té druhé
 skupiny, stáří nevadí a klidně sáhni i o půl roku zpět.
 
-Když musíš sáhnout po starším článku, **v shrnutí to napiš** — ať je vidět, že dnes nevyšly tři.
+Když musíš sáhnout po starším článku, **v shrnutí to napiš** — ať je vidět, že dávka neměla tři.
 
 **Sdílené proměnné (per článek):**
 
