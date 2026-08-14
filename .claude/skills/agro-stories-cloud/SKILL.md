@@ -125,6 +125,13 @@ Skill i `posted-stories-log.json` žijí v `main`. Každý běh musí začít od
 posledního stavu, jinak uvidí zastaralý log a vybral by **stejné články znovu**.
 
 ```bash
+# Routine session startuje s PRÁZDNÝM adresářem — repo tam není, musí se naklonovat.
+# Při ručním spuštění v session, která repo už má, se klon přeskočí.
+if [ ! -d .git ]; then
+  cd ~ && rm -rf Claude-Code-Skills
+  git clone https://github.com/kolderbenjamin-sys/Claude-Code-Skills.git
+  cd Claude-Code-Skills
+fi
 git fetch origin main
 git checkout -B main origin/main
 jq length posted-stories-log.json    # kolik story už proběhlo
@@ -458,8 +465,27 @@ mv /tmp/merged.json posted-stories-log.json
 
 git add posted-stories-log.json
 git commit -m "agro-stories-cloud: naplánovány story $(date -u +%Y-%m-%d)"
-git push origin main
+
+# Rebase kvůli souběhu: main se mohl mezitím pohnout jinou session.
+git pull --rebase origin main
+
+# Push MUSÍ projít. Když ne, je to CHYBA BĚHU, ne varování — bez uloženého logu
+# vybere zítřejší běh stejné články a story se zopakují.
+if git push origin main; then
+  echo "log uložen do main"
+else
+  echo "CHYBA: push do main odmítnut — zkouším záložní stavovou větev"
+  git push -u origin HEAD:claude/stories-state && \
+    echo "CHYBA BĚHU: log uložen jen do claude/stories-state, NE do main." && \
+    echo "Ben musí v nastavení Routine zapnout 'Allow unrestricted branch pushes'," && \
+    echo "jinak se main přestane aktualizovat. Uveď to ve shrnutí jako chybu."
+fi
 ```
+
+> **Proč ta pojistka:** repo může mít povolený push jen na větve s prefixem `claude/`.
+> Bez ověření by push do `main` selhal potichu, běh by se tvářil jako úspěšný a druhý
+> den by vyjely stejné story. Záložní větev stav aspoň nezahodí — ale je to stav
+> k opravě, ne provozní režim.
 
 ---
 
