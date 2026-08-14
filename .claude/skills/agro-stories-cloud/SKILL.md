@@ -1,6 +1,6 @@
 ---
 name: agro-stories-cloud
-description: "Vytvoří a naplánuje zemědělské STORY (9:16, 1080×1920) z publikovaných článků na Profifarmar.cz — na Instagram i Facebook přes Buffer. Jedním neinteraktivním během vezme 3 články, které vyšly nad ránem, pro každý vyrenderuje story vizuál v brandu ProfiFarmář (cover fotka + kategorie + datum + titulek), nahraje na Cloudinary a naplánuje je na 07:00, 12:00 a 18:00 Europe/Prague, takže je na profilu živá story po celý den. Když článků na dnešek vyjde méně než tři, doplní zbytek staršími, ale jen sezónně neutrálními (nedá v srpnu story o dubnovém suchu). Na rozdíl od agro-socials-local a agro-socials-cloud, které dělají čtvercové 4:5 příspěvky do feedu přes Canva šablonu, tento skill dělá výhradně vertikální story a vizuál renderuje lokálně přes Chromium (nezávisle na Canva kvótě). Určeno pro Claude Code cloud Routine (Linux, bash/curl/jq/node, žádný interaktivní checkpoint). Použij vždy, když uživatel chce dát článek na story, naplánovat story, udělat 9:16 příspěvek nebo vertikální vizuál. Trigger keywords: agro stories, story z článku, dej to na story, naplánuj story, 9:16 story, vertikální příspěvek, instagram story agro, facebook story agro, tři story denně, stories cloud, story routine."
+description: "Vytvoří a naplánuje zemědělské STORY (9:16, 1080×1920) z publikovaných článků na Profifarmar.cz — na Instagram i Facebook přes Buffer. Jedním neinteraktivním během vezme 3 nejnovější články z poslední redakční dávky (ta vzniká večer PŘED během, takže se hledá ve včerejšku a dnešku, protože publikace přetékají přes půlnoc), pro každý vyrenderuje story vizuál v brandu ProfiFarmář (cover fotka + kategorie + datum + titulek), nahraje na Cloudinary a naplánuje je na 07:00, 12:00 a 18:00 Europe/Prague, takže je na profilu živá story po celý den. Když je čerstvých článků méně než tři, doplní zbytek staršími, ale jen sezónně neutrálními (nedá v srpnu story o dubnovém suchu). Na rozdíl od agro-socials-local a agro-socials-cloud, které dělají čtvercové 4:5 příspěvky do feedu přes Canva šablonu, tento skill dělá výhradně vertikální story a vizuál renderuje lokálně přes Chromium (nezávisle na Canva kvótě). Určeno pro Claude Code cloud Routine (Linux, bash/curl/jq/node, žádný interaktivní checkpoint). Použij vždy, když uživatel chce dát článek na story, naplánovat story, udělat 9:16 příspěvek nebo vertikální vizuál. Trigger keywords: agro stories, story z článku, dej to na story, naplánuj story, 9:16 story, vertikální příspěvek, instagram story agro, facebook story agro, tři story denně, stories cloud, story routine."
 ---
 
 # Agro-Stories Cloud Skill
@@ -30,13 +30,24 @@ dojíždí až do dalšího poledne (story žije 24 h).
 
 ## Vstup — které články
 
-Cílem je **3 články, které vyšly dnes nad ránem**. To je běžný stav a tehdy se nic nedomýšlí.
+Cílem jsou **3 nejnovější články z poslední redakční dávky**. To je běžný stav a tehdy se nic
+nedomýšlí.
 
-1. **Primárně** vezmi všechny dnešní `published` články s `cover_image_url`, které ještě nejsou
-   v `posted-stories-log.json` (dnešek podle `published_at` v Europe/Prague, ne UTC).
+> **Dávka vzniká večer PŘEDEM.** Redakce píše články v podvečer dne před během Routine, takže když
+> se skill v 6:20 probudí, „nové" články mají včerejší datum, ne dnešní. Nehledej proto dnešek —
+> hledej **včerejšek**.
+>
+> Zároveň se dávka **láme přes půlnoc**: v reálných datech kulminují publikace v 18–23 h a část
+> přeteče do 00–03 h následujícího dne. Proto se bere **okno včera + dnes**, ne jeden kalendářní
+> den — jinak by ponoční část dávky vypadla. (Původní filtr na „dnešek" míjel pravý opak: celou
+> večerní část.)
+
+1. **Primárně** vezmi `published` články s `cover_image_url` publikované **včera nebo dnes**
+   (podle `published_at` v Europe/Prague, ne UTC), které ještě nejsou v `posted-stories-log.json`.
+   Seřaď od nejnovějšího.
 2. **Když jich je míň než 3** (redakce nestihla, výpadek), doplň zbytek **staršími** články podle
    pravidel pro sezónní vhodnost níže. Starší článek na story vadit nemusí — vadí jen takový,
-   který je vidět, že je „ze špatného období".
+   u kterého je vidět, že je „ze špatného období".
 3. **Když ani po doplnění nejsou 3**, naplánuj kolik jich je (sloty ber odshora: 07:00, pak 12:00,
    pak 18:00) a napiš to do shrnutí. Nikdy neopakuj článek, který už v logu je.
 4. **S tématem od uživatele** → vyber odpovídající články; dedupe proti logu platí pořád.
@@ -135,6 +146,7 @@ curl -sS -m 60 -H "Authorization: Bearer $AI_API_KEY" \
 
 posted_ids=$(jq '[.[].id]' posted-stories-log.json 2>/dev/null || echo "[]")
 dnes=$(TZ="Europe/Prague" date +%Y-%m-%d)
+vcera=$(TZ="Europe/Prague" date -d "yesterday" +%Y-%m-%d)
 
 # Všichni nepoužití kandidáti, od nejnovějšího
 jq --argjson posted "$posted_ids" '
@@ -144,19 +156,22 @@ jq --argjson posted "$posted_ids" '
   | sort_by(.published_at) | reverse
 ' /tmp/articles.json > /tmp/candidates.json
 
-# published_at má tvar "2026-08-12 15:42:45+02" — pro dnešek stačí prefix data
-jq --arg d "$dnes" '[ .[] | select(.published_at | startswith($d)) ]' \
-  /tmp/candidates.json > /tmp/dnesni.json
+# published_at má tvar "2026-08-12 18:19:20+02" — prefix data stačí.
+# Bereme VČERA i DNES, protože večerní dávka přetéká přes půlnoc.
+jq --arg v "$vcera" --arg d "$dnes" '
+  [ .[] | select((.published_at | startswith($v)) or (.published_at | startswith($d))) ]
+' /tmp/candidates.json > /tmp/cerstve.json
 
-echo "dnes ($dnes): $(jq length /tmp/dnesni.json) článků"
-jq -r '.[] | "  DNES   \(.published_at)  cat=\(.category_id)  \(.title)"' /tmp/dnesni.json
-jq -r --arg d "$dnes" '.[] | select(.published_at | startswith($d) | not)
-       | "  starší \(.published_at)  cat=\(.category_id)  \(.title)"' /tmp/candidates.json | head -15
+echo "čerstvé ($vcera + $dnes): $(jq length /tmp/cerstve.json) článků"
+jq -r '.[] | "  ČERSTVÝ \(.published_at)  cat=\(.category_id)  \(.title)"' /tmp/cerstve.json
+jq -r --arg v "$vcera" --arg d "$dnes" '.[]
+       | select(((.published_at|startswith($v)) or (.published_at|startswith($d))) | not)
+       | "  starší  \(.published_at)  cat=\(.category_id)  \(.title)"' /tmp/candidates.json | head -15
 ```
 
 **Výběr:**
 
-- Jsou-li dnešní **3**, ber je a nic dalšího neřeš.
+- Jsou-li čerstvé **3**, ber je a nic dalšího neřeš.
 - Je-li jich **míň**, doplň ze seznamu „starší" tolik, aby byly 3 — ale jen ty, které projdou
   **sezónní vhodností** (viz sekce Vstup). Ber od nejnovějšího a nevhodné přeskakuj.
 - Nejsou-li ani tak 3, naplánuj kolik jich je a uveď to ve shrnutí.
@@ -452,7 +467,7 @@ git push origin main
 
 ```
 ✅ AGRO-STORIES — naplánovány 3 story
-   Zdroj: 3 dnešní články        (nebo: 2 dnešní + 1 starší — viz níže)
+   Zdroj: 3 čerstvé články z dávky [DATUM]   (nebo: 2 čerstvé + 1 starší — viz níže)
 
 🌅 07:00 Europe/Prague ([due] UTC)
    "[TITULEK 1]" ([KATEGORIE 1])
@@ -467,7 +482,7 @@ git push origin main
    🖼️  [CLOUDINARY_URL 2]
 
 🌆 18:00 Europe/Prague — ⚠️ ODESLÁNO IHNED, fronta byla plná
-   "[TITULEK 3]" ([KATEGORIE 3])  ⚠️ starší článek z [DATUM] — dnes vyšly jen 2
+   "[TITULEK 3]" ([KATEGORIE 3])  ⚠️ starší článek z [DATUM] — v dávce byly jen 2
    📸 Instagram story — ID: [post_id] | 🔗 link sticker: [CLANEK_URL 3]
    📘 Facebook story  — ID: [post_id]
    🖼️  [CLOUDINARY_URL 3]
@@ -477,7 +492,7 @@ git push origin main
 
 Dvě věci se ve shrnutí **musí** objevit, jinak zůstanou skryté:
 
-- **starší článek** → označ u dané story a napiš, kolik článků dnes vyšlo (viz třetí výše);
+- **starší článek** → označ u dané story a napiš, kolik čerstvých článků dávka měla (viz třetí výše);
 - **únik přes `shareNow`** → napiš u slotu, že story šla ven ihned místo v plánovanou hodinu,
   protože fronta byla plná (viz třetí výše).
 
