@@ -477,13 +477,29 @@ else
   echo "CHYBA: push do main odmítnut — zkouším záložní stavovou větev"
   git push -u origin HEAD:claude/stories-state && \
     echo "CHYBA BĚHU: log uložen jen do claude/stories-state, NE do main." && \
-    echo "Ben musí v nastavení Routine zapnout 'Allow unrestricted branch pushes'," && \
-    echo "jinak se main přestane aktualizovat. Uveď to ve shrnutí jako chybu."
+    echo "Uveď to ve shrnutí jako chybu a napiš přesný důvod odmítnutí z výstupu gitu —" && \
+    echo "podle něj se pozná, která ze tří podmínek níže neplatí."
 fi
 ```
 
-> **Proč ta pojistka:** repo může mít povolený push jen na větve s prefixem `claude/`.
-> Bez ověření by push do `main` selhal potichu, běh by se tvářil jako úspěšný a druhý
+> **Proč ta pojistka a co odmítnutí znamená.** Routine session smí do větve **bez prefixu
+> `claude/`** pushovat, ale Claude Code push předem prověří a odmítne ho, když platí
+> kterákoli z těchto tří podmínek ([dokumentace k Routines](https://code.claude.com/docs/en/routines),
+> sekce „Repositories and branch permissions"):
+>
+> 1. větev je na GitHubu **chráněná** (branch protection),
+> 2. **někdo jiný** má z té větve otevřenou pull request,
+> 3. větev nese **commity od někoho jiného než tebe**.
+>
+> Stav k 14. 8. 2026: ověřeno, že žádná z podmínek na `main` neplatí — push do `main`
+> reálně prošel. Kdyby se to změnilo, důvod bude ve výstupu gitu a řeší se na GitHubu,
+> ne v nastavení Claude Code.
+>
+> ⚠️ **Žádný přepínač „Allow unrestricted branch pushes" neexistuje.** Tenhle název koluje
+> ve starších poznámkách u `agro-socials-cloud`, ale v dokumentaci ani v UI nic takového
+> není — nehledej ho a neposílej pro něj uživatele. Platí výhradně ty tři podmínky výše.
+>
+> Bez téhle pojistky by push do `main` selhal potichu, běh by se tvářil jako úspěšný a druhý
 > den by vyjely stejné story. Záložní větev stav aspoň nezahodí — ale je to stav
 > k opravě, ne provozní režim.
 
