@@ -59,7 +59,8 @@ Použij Windows-MCP PowerShell:
 
 ```powershell
 $apiKey = [System.Environment]::GetEnvironmentVariable("AI_API_KEY", "User")
-$req = [System.Net.HttpWebRequest]::Create("https://profifarmar.cz/api/webhook.php")
+# Bez ?limit vrací API tiše jen 100 záznamů, a ne spolehlivě těch nejnovějších — vždy dotahuj vše.
+$req = [System.Net.HttpWebRequest]::Create("https://profifarmar.cz/api/webhook.php?limit=10000")
 $req.Method = "GET"
 $req.Headers.Add("Authorization", "Bearer $apiKey")
 $resp = $req.GetResponse()

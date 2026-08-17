@@ -68,8 +68,9 @@ set -euo pipefail
 
 : "${AI_API_KEY:?AI_API_KEY chybí — nastav v Environment routine}"
 
+# Bez ?limit vrací API tiše jen 100 záznamů, a ne spolehlivě těch nejnovějších — vždy dotahuj vše.
 response=$(curl -sS -H "Authorization: Bearer $AI_API_KEY" \
-  "https://profifarmar.cz/api/webhook.php")
+  "https://profifarmar.cz/api/webhook.php?limit=10000")
 
 # posted-log.json = [{ "id": 123, "url": "...", "posted_at": "2026-06-30" }, ...]
 posted_ids=$(jq '[.[].id]' posted-log.json 2>/dev/null || echo "[]")

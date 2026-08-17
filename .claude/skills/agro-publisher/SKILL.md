@@ -47,7 +47,10 @@ Poté používej `$token` ve všech `Invoke-WebRequest` voláních v hlavičce `
 
 ### GET — Výpis článků
 
-Vrátí seznam článků. Bez parametrů vrátí všechny články, s `category_id` filtruje dle kategorie.
+Vrátí seznam článků. Bez parametrů vrátí jen **posledních 100 záznamů, a ne spolehlivě
+těch nejnovějších podle `published_at`** (ověřeno 17.8.2026: DB měla 221 článků, výchozích
+100 vynechalo jeden ze tří téhož dne publikovaných). Pro spolehlivý úplný výpis vždy použij
+`?limit=10000`. `category_id` filtruje dle kategorie a jde kombinovat s `limit`.
 
 **Všechny články:**
 
@@ -55,7 +58,7 @@ Vrátí seznam článků. Bez parametrů vrátí všechny články, s `category_
 $token = [System.Environment]::GetEnvironmentVariable('AI_API_KEY', 'User')
 
 $response = Invoke-WebRequest `
-  -Uri "https://profifarmar.cz/api/webhook.php" `
+  -Uri "https://profifarmar.cz/api/webhook.php?limit=10000" `
   -Method GET `
   -Headers @{
     "Authorization" = "Bearer $token"
@@ -68,7 +71,7 @@ $articles = ($response.Content | ConvertFrom-Json)
 
 ```powershell
 $response = Invoke-WebRequest `
-  -Uri "https://profifarmar.cz/api/webhook.php?category_id=1" `
+  -Uri "https://profifarmar.cz/api/webhook.php?category_id=1&limit=10000" `
   -Method GET `
   -Headers @{
     "Authorization" = "Bearer $token"

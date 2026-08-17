@@ -148,8 +148,11 @@ jq length posted-stories-log.json    # kolik story už proběhlo
 set -euo pipefail
 : "${AI_API_KEY:?AI_API_KEY chybí — nastav ji v sekci Environment u Routine}"
 
+# Bez ?limit vrací API tiše jen 100 záznamů, a ne spolehlivě těch nejnovějších podle
+# published_at (ověřeno 17.8.2026: DB měla 221 článků, výchozích 100 vynechalo jeden
+# ze tří dnešních čerstvých článků). ?limit=10000 vrátí vše.
 curl -sS -m 60 -H "Authorization: Bearer $AI_API_KEY" \
-  "https://profifarmar.cz/api/webhook.php" -o /tmp/articles.json
+  "https://profifarmar.cz/api/webhook.php?limit=10000" -o /tmp/articles.json
 
 posted_ids=$(jq '[.[].id]' posted-stories-log.json 2>/dev/null || echo "[]")
 dnes=$(TZ="Europe/Prague" date +%Y-%m-%d)

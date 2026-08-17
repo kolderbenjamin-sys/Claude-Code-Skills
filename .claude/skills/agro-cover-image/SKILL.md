@@ -158,8 +158,9 @@ if (-not $token) {
 ```powershell
 $token = [System.Environment]::GetEnvironmentVariable('AI_API_KEY', 'User')
 
+# Bez ?limit vrací API tiše jen 100 záznamů, a ne spolehlivě těch nejnovějších — vždy dotahuj vše.
 $response = Invoke-WebRequest `
-  -Uri "https://profifarmar.cz/api/webhook.php" `
+  -Uri "https://profifarmar.cz/api/webhook.php?limit=10000" `
   -Method GET `
   -Headers @{
     "Authorization" = "Bearer $token"

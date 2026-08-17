@@ -72,7 +72,8 @@ if (-not $token) {
     exit 1
 }
 
-$response = Invoke-WebRequest -Uri "https://profifarmar.cz/api/webhook.php" -Method GET `
+# Bez ?limit vrací API tiše jen 100 záznamů, a ne spolehlivě těch nejnovějších — vždy dotahuj vše.
+$response = Invoke-WebRequest -Uri "https://profifarmar.cz/api/webhook.php?limit=10000" -Method GET `
   -Headers @{ "Authorization" = "Bearer $token" } -UseBasicParsing
 $json = $response.Content | ConvertFrom-Json
 $articles = if ($json.data) { $json.data } else { $json }
