@@ -10,7 +10,7 @@ description: >
   Pokud se uživatel zmíní o psaní, rešerši nebo tvorbě zemědělských zpravodajských
   textů — vždy aktivuj tento skill.
 metadata:
-  version: "0.3.0"
+  version: "0.4.0"
   author: "Benjamin Kolder"
 ---
 
@@ -53,7 +53,18 @@ Pokud `google_drive_fetch` selže → pokračuj bez přerušení na Krok 2 a pou
 
 ### Krok 1b – Kontrola duplicit přes Profifarmar API
 
-**Před výběrem témat** načti všechny existující články z databáze a vyfiltruj publikované.
+**Před výběrem témat** načti **VŠECHNY** existující publikované články z databáze — ne jen výřez.
+
+**KRITICKÉ — dvě věci, které dřív způsobily duplicity v produkci (13. 08. 2026, 4 skoro
+identické články o Zemi živitelce 2026 publikované během několika dní po sobě):**
+
+1. **Vždy volej s `?limit=10000`.** Bez tohoto parametru API vrací jen výchozích 100
+   článků — u archivu 150+ (natož 220+) je to libovolný výřez, ne posledních N. Duplicita
+   se pak snadno dostane mimo kontrolovaný vzorek.
+2. **Nikdy nevybírej jen „posledních 40" nebo jakékoli jiné okno seřazené podle
+   `created_at`.** Pole `created_at` v API odpovědi chybí/je `null`, takže řazení podle
+   data fakticky nefunguje a jakýkoli výřez (top 40, top 100...) je nespolehlivý.
+   Zkontroluj **titulky úplně všech** publikovaných článků, ne jen podmnožinu.
 
 Použij Windows-MCP PowerShell:
 
@@ -70,13 +81,11 @@ $resp.Close()
 $allArticles = ($body | ConvertFrom-Json).data
 $publishedTitles = ($allArticles | Where-Object { $_.status -eq "published" }).title
 Write-Output ($publishedTitles -join "`n")
+Write-Output "--- CELKEM: $($publishedTitles.Count) publikovaných článků ---"
 ```
 
-Uložíš do paměti seznam názvů všech **publikovaných** článků.
-
-**Pravidlo duplicity:** Téma je duplicitní, pokud:
-- název nebo klíčová slova navrhovaného článku se výrazně překrývají s některým publikovaným titulem
-- stejná událost, produkt nebo statistika je již hlavním tématem existujícího článku
+Uložíš do paměti seznam názvů **VŠECH** publikovaných článků (klidně stovky titulků —
+je to nutná cena za spolehlivou kontrolu duplicit; nikdy nezkracuj na "posledních N").
 
 Pokud API selže → pokračuj bez kontroly a zaznamenej `[WARN] Duplicity nezkontrolovány — API nedostupné`.
 
@@ -91,6 +100,14 @@ Prohledej zdroje a vyber **3 nejatraktivnější témata** podle priorit:
 - b) Nové technologie konkrétních firem (reálné produkty, ne obecné trendy)
 - c) Aktuálnost (co se stalo v posledních 2–4 týdnech)
 - d) Jiná zajímavá témata ze širšího zemědělství
+
+**Pozor na "evergreen" témata** — nadcházející veletrhy a akce (např. Země živitelka,
+EuroTier, Agritechnica) zůstávají v aktuálních zdrojích celé dny/týdny před konáním, takže
+je snadné vybrat "stejné" téma znovu v dalším běhu pipeline i s jiným úhlem/titulkem.
+Před finálním výběrem zkontroluj **Krok 1b seznam** nejen na doslovnou shodu titulku, ale
+i na shodu tématu/události (viz Pravidlo duplicity níže) — u akcí typu veletrh to typicky
+znamená: pokud už existuje publikovaný článek o téže akci, přeskoč a vyber jiné téma,
+i kdyby šlo napsat "nový úhel" (nová čísla, jiný detail).
 
 ---
 
@@ -110,7 +127,7 @@ Pro každé ze 3 témat:
 Napiš 3 články. Každý musí mít **přesně tuto strukturu** (viz vzor níže):
 
 1. **Nadpis** — v kurzívě (`*Nadpis*`), výsledek nebo událost, ne otázka
-2. **Perex** — 1–2 věty shrnující článek. Plynulý text v souvislých větách, žádné odrážky. BEZ HTML tagů. Toto se na webu zobrazuje jako samostatný blok pod nadpisem — nesmí se opakovat v těle.
+2. **Perex** — 1–2 věty shrnující článek. Plynulý text, ne bullet body. BEZ HTML tagů. Toto se na webu zobrazuje jako samostatný blok pod nadpisem — nesmí se opakovat v těle.
 3. **Tělo článku** — **200–400 slov**, 3–4 odstavce s podnadpisy, přítomný nebo minulý čas
 4. **Zdroje** — klikatelné HTML odkazy, ne surové URL
 
@@ -125,7 +142,7 @@ Napiš 3 články. Každý musí mít **přesně tuto strukturu** (viz vzor ní�
 
 **Pole `body` = čisté HTML, žádný markdown.** Web tyto značky nezpracovává a zobrazuje je jako surový text.
 
-**Perex NIKDY nevkládej do body.** Body začíná prvním podnadpisem `<h2>`, ne perexem. Jinak se perex na webu zobrazí dvakrát.
+**Perex NIKDY nevkládej do body.** Body začíná bullet body, ne perexem. Jinak se perex na webu zobrazí dvakrát.
 
 **Datum do body nevkládej** — řeší ho CMS automaticky.
 
@@ -203,9 +220,12 @@ PEREX: Americká firma NEXAT dosáhla v Brazílii nového světového rekordu ve
 
 ### Checklist před uložením
 
-1. `body` (vše od prvního podnadpisu po zdroje) = čisté HTML, žádný markdown
+1. `body` (vše od bullet bodů po zdroje) = čisté HTML, žádný markdown
 2. `perex` = samostatný řádek s prefixem `PEREX:`, plynulý text, BEZ HTML tagů
-3. `body` začíná podnadpisem `<h2>`, ne perexem
+3. `body` začíná bullet body (`<p><strong>`), ne perexem
 4. Podnadpisy = `<h2>`, odstavce = `<p>`
 5. Zdroje = klikatelné `<a href="plná-url">doména.cz</a>`
 6. Datum se do body nevkládá (řeší CMS)
+7. Krok 1b proběhl na **kompletním** seznamu publikovaných článků (`?limit=10000`, žádné
+   omezení na "posledních N"), a žádné z 3 vybraných témat se neshoduje s existujícím
+   publikovaným článkem — ani doslovně, ani jako stejná událost/akce s jiným úhlem

@@ -1,54 +1,115 @@
 ---
 name: agro-cover-image
 description: >
-  Nahraje cover obrázek k zemědělskému článku na Profifarmar.cz.
-  Pipeline: najde obrázek v pracovní složce → Cloudinary upload (složka ČLÁNKY) → najde nejnovější článek
-  bez cover_image_url přes Profifarmar API → nastaví cover_image_url → změní status na published.
-  Použij tento skill vždy, když uživatel: chce přidat obrázek k článku, nahrát cover image,
-  přidat titulní obrázek, doplnit obrázek k článku na profifarmar, publikovat článek s obrázkem,
-  zmíní "cover image", "titulní obrázek", "obrázek k článku", "nahraj obrázek k článku",
-  nebo má v složce obrázek a chce ho přiřadit k článku.
-  Trigger keywords: cover image, titulní obrázek, obrázek k článku, nahraj obrázek, přidej obrázek,
-  cover článek, obrázek profifarmar, publikuj s obrázkem, doplň obrázek.
-  Aktivuj i když uživatel jen řekne "přidej obrázek" v kontextu zemědělských článků.
+  Nahraje cover obrázky k zemědělským článkům na Profifarmar.cz s inteligentním přiřazením podle obsahu. Pipeline: najde všechny obrázky v pracovní složce, vizuálně zanalyzuje obsah každého, načte články bez cover_image_url přes Profifarmar API, spáruje obrázky s články podle kontextu (co je na obrázku vs. téma článku), případně zkomprimuje obrázky větší než 10 MB kvůli limitu Cloudinary, nahraje je do Cloudinary, nastaví cover_image_url a změní status článku na published. Podporuje zpracování jednoho i více obrázků najednou. Použij tento skill vždy, když uživatel chce přidat nebo nahrát titulní / cover obrázek k zemědělskému článku na Profifarmar.cz nebo publikovat článek s obrázkem
 ---
 
 # Agro Cover Image Skill
 
-Nahraje obrázek z pracovní složky na Cloudinary a přiřadí ho jako cover image k nejnovějšímu článku bez obrázku na Profifarmar.cz. Poté článek publikuje. Plně autonomní — žádné dotazy na uživatele.
+Nahraje obrázky z pracovní složky na Cloudinary a inteligentně je přiřadí jako cover image k článkům bez obrázku na Profifarmar.cz. Podporuje hromadné zpracování více obrázků najednou s párováním podle vizuálního obsahu. Plně autonomní — žádné dotazy na uživatele.
 
 ---
 
-## Krok 1 — Najdi obrázek v pracovní složce
+## Krok 1 — Najdi VŠECHNY obrázky v pracovní složce
 
-Prohledej složku, ve které tento skill pracuje (typicky Cowork outputs složka), a najdi nejnovější soubor s příponou `.jpg`, `.jpeg`, `.png` nebo `.webp`.
+Prohledej složku jednotlivě pro každou příponu (FileSystem tool nepodporuje čárkou oddělené patterny):
 
 ```
-mcp__Windows-MCP__FileSystem
-  mode: list
-  path: [PRACOVNÍ_SLOŽKA]
-  pattern: *.jpg,*.jpeg,*.png,*.webp
+mcp__Windows-MCP__FileSystem  mode: list  path: [PRACOVNÍ_SLOŽKA]  pattern: *.png
+mcp__Windows-MCP__FileSystem  mode: list  path: [PRACOVNÍ_SLOŽKA]  pattern: *.jpg
+mcp__Windows-MCP__FileSystem  mode: list  path: [PRACOVNÍ_SLOŽKA]  pattern: *.jpeg
+mcp__Windows-MCP__FileSystem  mode: list  path: [PRACOVNÍ_SLOŽKA]  pattern: *.webp
 ```
 
-Pokud je obrázků více, vezmi **nejnovější** podle data modifikace.
+**Spusť všechny 4 paralelně** (v jednom tool-call bloku).
 
 Pokud žádný obrázek neexistuje → ukonči s hláškou:
 `[COVER] CHYBA — žádný obrázek nenalezen v pracovní složce.`
 
-Ulož si cestu jako `[IMG_PATH]` a příponu jako `[IMG_EXT]` (jpg/png/webp).
+Pro každý nalezený obrázek zjisti metadata (`mode: info`) — velikost a datum modifikace. **Ignoruj** soubory obsahující `_compressed` v názvu (ty jsou dočasné).
+
+Ulož si seznam jako `[IMAGES]` — pole objektů `{ path, ext, size_bytes, modified }`.
 
 Mapování přípony na MIME typ:
-- `.jpg` / `.jpeg` → `image/jpeg`
-- `.png` → `image/png`
-- `.webp` → `image/webp`
+
+* `.jpg` / `.jpeg` → `image/jpeg`
+* `.png` → `image/png`
+* `.webp` → `image/webp`
 
 ---
 
-## Krok 2 — Cloudinary upload (PowerShell REST API)
+## Krok 1b — Komprese velkých obrázků (>10 MB)
+
+Cloudinary free plan má limit **10 485 760 bytes** (10 MB). Pro každý obrázek kde `size_bytes > 10_485_760`:
+
+```powershell
+Add-Type -AssemblyName System.Drawing
+$srcPath = "[IMG_PATH]"
+$dstPath = "[IMG_PATH_BEZ_PŘÍPONY]_compressed.jpg"
+
+$img = [System.Drawing.Image]::FromFile($srcPath)
+$codec = [System.Drawing.Imaging.ImageCodecInfo]::GetImageEncoders() | Where-Object { $_.MimeType -eq "image/jpeg" }
+$encoderParams = New-Object System.Drawing.Imaging.EncoderParameters(1)
+$encoderParams.Param[0] = New-Object System.Drawing.Imaging.EncoderParameter([System.Drawing.Imaging.Encoder]::Quality, 85L)
+$img.Save($dstPath, $codec, $encoderParams)
+$img.Dispose()
+
+$fi = Get-Item $dstPath
+Write-Output "Compressed: $($fi.Length) bytes ($([math]::Round($fi.Length/1MB, 2)) MB)"
+```
+
+Aktualizuj `[IMAGES]` — nahraď `path` kompresovanou verzí, `ext` na `.jpg`, `size_bytes` novou hodnotou.
+
+Pokud i po kompresi >10 MB → sniž kvalitu na 70L a zkus znovu.
+
+---
+
+## Krok 2 — Vizuální analýza a párování s články
+
+### 2a — Prohlédni každý obrázek
+
+Pomocí **Read** tool (Claude je multimodální) otevři každý obrázek a zapiš si stručný popis obsahu:
+
+```
+Pro každý obrázek v [IMAGES]:
+  Read file_path=[IMG_PATH]
+  → zapiš: [IMG_PATH] = "popis co je na obrázku" (např. "dojírna s kravami a Afimilk dashboard", "suchá popraskaná půda", "červená secí jednotka na poli")
+```
+
+### 2b — Načti články bez cover image
+
+(Viz Krok 4 níže — proveď GET request na API)
+
+### 2c — Spáruj obrázky s články podle kontextu
+
+Pro každý článek bez cover image porovnej jeho `title` s popisem každého obrázku a vytvoř páry:
+
+**Pravidla párování (v pořadí priority):**
+
+1. **Přímá shoda** — obrázek vizuálně zobrazuje přesně to, o čem článek pojednává (např. secí stroj → článek o secí jednotce)
+2. **Tematická shoda** — obrázek odpovídá tématu článku (např. suché pole → článek o suchu)
+3. **Kategoriová shoda** — obrázek odpovídá kategorii článku (např. krávy → článek o chovu)
+4. **Zbytková přiřazení** — pokud zbývají nepřiřazené obrázky i články, přiřaď zbylé k sobě
+
+**Důležité:**
+
+* Každý obrázek může být přiřazen **maximálně k jednomu** článku
+* Každý článek dostane **maximálně jeden** obrázek
+* Pokud je obrázků **méně** než článků → zpracuj jen tolik článků, kolik je obrázků (preferuj nejnovější články)
+* Pokud je obrázků **více** než článků → přebytek obrázků ignoruj
+
+Ulož výsledek jako `[PAIRS]` — pole `{ img_path, img_mime, article_id, article_title, article_status }`.
+
+---
+
+## Krok 3 — Cloudinary upload VŠECH spárovaných obrázků
 
 Cloudinary MCP nepodporuje lokální `file://` cesty — upload probíhá přes přímé REST API volání z PC pomocí Windows-MCP PowerShell. Endpoint je **`image/upload`** (ne `video/upload`).
 
+**Pro každý pár v `[PAIRS]` spusť upload** (nezávislé uploady lze spustit **paralelně** v jednom tool-call bloku):
+
 **Konstanty:**
+
 ```
 cloudName  = "dxrpsbvx2"
 apiKey     = "963366693952873"
@@ -56,7 +117,7 @@ apiSecret  = "As2Z8GqSVWA3RIQG-aeylsSWipk"
 folder     = "ČLÁNKY"
 ```
 
-**PowerShell příkaz** (spusť přes `mcp__Windows-MCP__PowerShell`):
+**PowerShell příkaz pro KAŽDÝ obrázek** (spusť přes `mcp__Windows-MCP__PowerShell`):
 
 ```powershell
 $filePath = "[IMG_PATH]"
@@ -130,16 +191,15 @@ try {
 }
 ```
 
-Z `SUCCESS:` response parsuj:
-- `secure_url` → `[CLOUDINARY_URL]`
+Z každého `SUCCESS:` response parsuj `secure_url` a ulož do příslušného páru jako `[CLOUDINARY_URL]`.
 
-Pokud upload selže → zaznamenej chybu a ukonči. Bez URL nelze pokračovat.
+Pokud upload selže → zaznamenej chybu pro daný pár, pokračuj s ostatními. Pár bez URL se přeskočí.
 
-**Nahraď `[IMG_PATH]` a `[MIME_TYPE]`** skutečnými hodnotami z Kroku 1.
+**Nahraď `[IMG_PATH]` a `[MIME_TYPE]`** skutečnými hodnotami z příslušného páru.
 
 ---
 
-## Krok 3 — Najdi článek bez cover image
+## Krok 4 — Načti články bez cover image
 
 ### Načtení API klíče
 
@@ -169,26 +229,28 @@ $response = Invoke-WebRequest `
 Write-Output $response.Content
 ```
 
-### Výběr článku
+### Výběr článků
 
-Z odpovědi vyber článek podle těchto pravidel (v tomto pořadí priority):
+Z odpovědi vyber články podle těchto pravidel:
 
 1. **Filtruj** — vezmi všechny články kde `cover_image_url` je `null`, prázdný string, nebo pole úplně chybí
-2. **Seřaď** — nejnovější první (podle data vytvoření, pokud API vrací datum; jinak podle ID sestupně)
-3. **Vyber první** — to je tvůj cílový článek
+2. **Seřaď** — nejnovější první (podle data vytvoření, pokud API vrací datum; jinak podle pořadí v response)
 
 Pokud žádný článek bez cover image neexistuje → ukonči s hláškou:
 `[COVER] INFO — všechny články již mají cover image. Žádná akce.`
 
-Ulož si `id` vybraného článku jako `[ARTICLE_ID]` a `title` jako `[ARTICLE_TITLE]`.
+Ulož si seznam jako `[ARTICLES_NO_COVER]` — pole `{ id, title, status }`.
+
+**POZNÁMKA:** Tento krok proveď PŘED Krokem 2c (párování), protože potřebuješ znát tituly článků pro kontextové přiřazení.
 
 ---
 
-## Krok 4 — Nastav cover image a publikuj (jeden PUT request)
+## Krok 5 — Nastav cover image a publikuj (PUT requesty)
 
-Pošli jeden PUT request, který nastaví `cover_image_url` a zároveň změní `status` na `published`. Tím se ušetří jedno API volání.
+Pro každý úspěšně nahraný pár v `[PAIRS]` pošli PUT request. **Nezávislé PUT requesty lze spustit paralelně.**
 
-Pokud článek **již je** `published`, pošli PUT jen s `cover_image_url` (bez změny statusu — ten už je správný).
+Pokud článek **je `draft`**, pošli PUT s `cover_image_url` + `status: published`.
+Pokud článek **již je `published`**, pošli PUT jen s `cover_image_url`.
 
 ```powershell
 $token = [System.Environment]::GetEnvironmentVariable('AI_API_KEY', 'User')
@@ -214,23 +276,78 @@ $response = Invoke-WebRequest `
 Write-Output $response.Content
 ```
 
-Ověř, že response obsahuje `"success":true`. Pokud ne, zaznamenej chybu.
+Ověř, že response obsahuje `"success":true`. Pokud ne, zaznamenej chybu a zkus jednou znovu.
 
 ---
 
-## Krok 5 — Shrnutí
+## Krok 6 — Shrnutí
 
-Zobraz v češtině:
+Zobraz v češtině souhrnnou tabulku VŠECH zpracovaných párů:
 
 ```
-✅ Cover image přiřazen:
-   📰 Článek: [ARTICLE_TITLE]
-   🆔 ID: [ARTICLE_ID]
-   🖼️  Cover URL: [CLOUDINARY_URL]
-   📊 Status: published
+✅ Cover images přiřazeny ([POČET_ÚSPĚŠNÝCH]/[POČET_PÁRŮ]):
 
-☁️  Cloudinary: [CLOUDINARY_URL]
+  1. 📰 Článek: [ARTICLE_TITLE]
+     🖼️  Obrázek: [popis obsahu obrázku]
+     🔗 Cover URL: [CLOUDINARY_URL]
+     📊 Status: published
+
+  2. 📰 Článek: [ARTICLE_TITLE]
+     🖼️  Obrázek: [popis obsahu obrázku]
+     🔗 Cover URL: [CLOUDINARY_URL]
+     📊 Status: published
+
+  ... (pro každý pár)
 ```
+
+Pokud nějaké páry selhaly, zobraz je zvlášť:
+
+```
+❌ Selhalo ([POČET_CHYB]):
+  - [ARTICLE_TITLE]: [důvod selhání]
+```
+
+Pokud zbyly nepřiřazené články (více článků než obrázků):
+
+```
+⏳ Články bez cover image ([POČET]):
+  - [ARTICLE_TITLE] (ID: [ARTICLE_ID])
+```
+
+---
+
+## Krok 7 — Úklid pracovní složky
+
+Po úspěšném přiřazení VŠECH párů smaž zpracované obrázky z pracovní složky. Maž **pouze** obrázky, které byly úspěšně nahrány na Cloudinary a přiřazeny k článku.
+
+```powershell
+# Pro každý úspěšně zpracovaný pár:
+Remove-Item -Path "[IMG_PATH]" -Force
+# Pokud existuje i kompresovaná verze:
+$compressed = "[IMG_PATH_BEZ_PŘÍPONY]_compressed.jpg"
+if (Test-Path $compressed) { Remove-Item -Path $compressed -Force }
+```
+
+**Pravidla:**
+
+* Maž **pouze** úspěšně zpracované obrázky (ne ty, u kterých upload nebo PUT selhal)
+* Maž i dočasné `_compressed` verze
+* Pokud smazání selže → zaloguj varování, ale nepřerušuj skill (obrázek už je na Cloudinary)
+
+---
+
+## Pořadí provádění kroků
+
+Doporučené pořadí pro maximální efektivitu:
+
+1. **Krok 1** — najdi obrázky + metadata (paralelní FileSystem volání)
+2. **Krok 1b** — komprese velkých obrázků (pokud potřeba)
+3. **Krok 4** — načti články z API (paralelně s Krokem 1)
+4. **Krok 2a** — vizuálně analyzuj obrázky (Read tool, paralelně)
+5. **Krok 2c** — spáruj obrázky s články
+6. **Krok 3** — Cloudinary upload (paralelně pro všechny páry)
+7. **Krok 5** — PUT requesty (paralelně pro všechny páry)
+8. **Krok 6** — shrnutí
 
 ---
 
@@ -239,7 +356,11 @@ Zobraz v češtině:
 | Stav | Příčina | Řešení |
 |---|---|---|
 | Žádný obrázek ve složce | Uživatel ho ještě nevytvořil | Ukonči s hláškou, požádej o nahrání obrázku |
-| Cloudinary upload selže | Špatné credentials nebo síťová chyba | Zaznamenej chybu, ukonči |
+| Obrázek >10 MB | Příliš velký pro Cloudinary | Automatická komprese do JPEG quality 85 (pak 70) |
+| Cloudinary upload selže | Špatné credentials nebo síťová chyba | Zaznamenej chybu, pokračuj s ostatními páry |
 | AI_API_KEY chybí | Proměnná není nastavena | Požádej uživatele o nastavení tokenu |
 | Žádný článek bez cover image | Všechny články mají obrázek | Informuj uživatele, ukonči gracefully |
+| Více obrázků než článků | Přebytek obrázků | Ignoruj přebytek, zpracuj jen tolik kolik je článků |
+| Více článků než obrázků | Nedostatek obrázků | Zpracuj co je k dispozici, zbylé články vypiš v shrnutí |
+| Špatné párování | Žádný obrázek neodpovídá článku | Přiřaď zbytkově (nejnovější obrázek → nejnovější článek) |
 | PUT selže | Chybné ID nebo server error | Zaznamenej chybu, zkus znovu jednou |

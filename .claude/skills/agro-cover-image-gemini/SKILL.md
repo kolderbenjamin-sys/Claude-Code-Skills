@@ -50,6 +50,10 @@ $response = Invoke-WebRequest -Uri "https://profifarmar.cz/api/webhook.php?limit
 Write-Output $response.Content
 ```
 
+**Důležité:** API má bez parametru `limit` výchozí stránkování na 100 článků — bez
+`?limit=10000` bys u větších archivů (150+ článků) viděl jen část a mohl bys minout
+starší články čekající na cover image. Vždy volej s `?limit=10000`.
+
 Z odpovědi vyber články, kde `cover_image_url` je `null`, prázdný string, nebo chybí úplně.
 Seřaď je od nejnovějšího (podle data vytvoření, jinak podle pořadí v response) a **vyber
 ten nejnovější** — generuješ jen pro jeden článek najednou, ne hromadně.
@@ -87,17 +91,54 @@ vkládat nesmyslný text. Ulož prompt jako `[IMAGE_PROMPT]`.
 
 ## Krok 3 — Vygeneruj obrázek v Gemini
 
-Použij Claude in Chrome nástroje (ne computer-use — prohlížeč běží na tier "read", takže
-klikat a psát musíš přes `mcp__Claude_in_Chrome__*`):
+Pro každý nový obrázek si vždy **otevři nový tab a fresh konverzaci** — recyklování chatu vede k tomu, že download tlačítko se naváže na předchozí obrázek a stahování selže:
 
-1. `navigate` na `https://gemini.google.com/app` (případně `tabs_context_mcp` →
-   `tabs_create_mcp`, pokud není otevřená karta)
-2. `find` vstupní pole pro prompt ("message Gemini" / textové pole na spodu stránky)
-3. `left_click` do pole, `type` text `[IMAGE_PROMPT]`, odešli (Enter nebo tlačítko Send)
-4. Počkej (pár sekund, generování obrázku trvá), pak `get_page_text` nebo `find`
-   ("generated image") ověř, že se obrázek vygeneroval
+1. `mcp__Claude_in_Chrome__tabs_create_mcp` — vytvoř nový tab
+2. `mcp__Claude_in_Chrome__navigate` na `https://gemini.google.com/app`
+3. Krátká pauza (3–4 s) pro načtení stránky
+4. Pošli prompt přes `javascript_tool` (nejspolehlivější, vyhne se synthetic-input problémům s contenteditable):
 
-Pokud Gemini vrátí více variant, vyber tu, která nejlépe odpovídá popisu scény.
+```javascript
+const promptText = "[IMAGE_PROMPT]";
+const editable = document.querySelector('div[contenteditable="true"][role="textbox"]')
+              || document.querySelector('div[contenteditable="true"]');
+if (!editable) { 'ERROR: no editable'; }
+else {
+  editable.focus();
+  while (editable.firstChild) editable.removeChild(editable.firstChild);
+  const p = document.createElement('p');
+  p.textContent = promptText;
+  editable.appendChild(p);
+  editable.dispatchEvent(new InputEvent('input', {
+    bubbles: true, cancelable: true, data: promptText, inputType: 'insertText'
+  }));
+  setTimeout(() => {
+    const btn = document.querySelector('button[aria-label="Poslat zprávu"]')
+             || document.querySelector('button[aria-label*="Send"]');
+    if (btn) btn.click();
+  }, 500);
+  'SUBMITTED';
+}
+```
+
+5. Počkej **50–90 sekund** — generování přes Gemini Flash trvá v praxi víc než „pár sekund". Pokus o klik na download tlačítko před dokončením generování selže, protože tlačítko stáhne prázdný / nedokončený blob.
+
+6. Ověř, že obrázek je hotový — buď přes `computer.screenshot` (vidíš ho na stránce) nebo přes JS:
+
+```javascript
+function deepFind(root, depth=0) {
+  if (depth > 5) return [];
+  let imgs = [];
+  if (root.querySelectorAll) root.querySelectorAll('img').forEach(i => imgs.push(i));
+  if (root.shadowRoot) imgs = imgs.concat(deepFind(root.shadowRoot, depth+1));
+  if (root.children) for (const c of root.children) if (c.shadowRoot) imgs = imgs.concat(deepFind(c.shadowRoot, depth+1));
+  return imgs;
+}
+const aigen = deepFind(document.body).filter(i => (i.alt||'').includes('vygenerováno') || (i.src||'').startsWith('blob:'));
+JSON.stringify(aigen.map(i => ({w: i.naturalWidth, h: i.naturalHeight, complete: i.complete})));
+```
+
+Pokud `complete: false` nebo `w: 0`, počkej dalších 20–30 s a zkontroluj znovu.
 
 **Pokud generování selže nebo Gemini odmítne** (např. kvůli politice obsahu), uprav
 `[IMAGE_PROMPT]` na obecnější/neutrálnější popis scény a zkus to znovu (max. 2×). Pokud
@@ -107,44 +148,97 @@ selže i podruhé, ukonči s hláškou `[COVER-GEMINI] CHYBA — Gemini obrázek
 
 ## Krok 4 — Stáhni vygenerovaný obrázek lokálně
 
-Gemini obrázky nejdou stáhnout kliknutím (otevřel by se systémový dialog, který nelze
-ovládat), a přímý `fetch(src)` z JS nástroje selže s `Failed to fetch` — blob URL patří
-renderovacímu procesu stránky, ne rozšíření. Base64 string vrácený z `javascript_tool`
-navíc bývá serverem MCP zablokován jako `[BLOCKED: Base64 encoded data]`. **Použij proto
-download-trigger techniku** — necháš stránku samotnou uložit soubor do Downloads, a pak
-ho jen přesuneš:
+**Toto je nejnáchylnější krok celého skillu.** Chrome z bezpečnostních důvodů spouští download **jen po skutečném (trusted) uživatelském kliknutí** — synthetic `.click()` z JS download tiše zablokuje, `fetch(blob_url)` z extension contextu vrátí „Failed to fetch", a chunked base64 přes JS → PowerShell spustí auto-mode classifier (klasifikováno jako exfiltrace dat). **Jediná spolehlivá cesta je `mcp__Claude_in_Chrome__computer.left_click` s pixel coordinates** — ten používá Chrome DevTools Protocol a injectuje **trusted MouseEvent**, který Chrome akceptuje.
 
-```javascript
-// mcp__Claude_in_Chrome__javascript_tool — spusť na kartě s Gemini
-const img = document.querySelector('[SELEKTOR_OBRÁZKU]'); // poslední vygenerovaný obrázek
-const canvas = document.createElement('canvas');
-canvas.width = img.naturalWidth;
-canvas.height = img.naturalHeight;
-canvas.getContext('2d').drawImage(img, 0, 0);
-const a = document.createElement('a');
-a.href = canvas.toDataURL('image/jpeg', 0.92);
-a.download = 'gemini_cover.jpg';
-document.body.appendChild(a);
-a.click();
-a.remove();
-'triggered download';
+### Ověřená sekvence (testováno 15. 6. 2026)
+
+**1) Screenshot — najdi pozici download tlačítek**
+
+```
+mcp__Claude_in_Chrome__computer.screenshot(tabId)
 ```
 
-(Pokud `drawImage` spadne na "tainted canvas" kvůli CORS, zkus rovnou `a.href = img.src`
-— funguje to, pokud je `src` už `data:` URL.) Soubor přistane v uživatelově složce
-**Downloads**. Najdi nejnovější `gemini_cover*.jpg`/`.png` tam (PowerShell `Get-ChildItem
-... | Sort-Object LastWriteTime -Descending | Select -First 1`) a přesuň/zkopíruj ho do
-pracovní složky:
+V pravém horním rohu vygenerovaného obrázku jsou 3 ikony (zleva):
+- **Sdílet obrázek** (`aria-label="Sdílet obrázek"`)
+- **Zkopírovat obrázek** (`aria-label="Zkopírovat obrázek"`)
+- **Stáhnout obrázek v plné velikosti** (`aria-label="Stáhnout obrázek v plné velikosti"`)
+
+Při rozlišení screenshotu ~1568×705 px jsou ikony typicky na souřadnicích:
+- Sdílet: ~(1192, 343)
+- Zkopírovat: ~(1238, 343)
+- Stáhnout: **~(1284, 343)**
+
+Když screenshot rozměry vypadají jinak, zkontroluj pozici tlačítka „Stáhnout" z aktuálního screenshotu.
+
+**2) Hover nad obrázkem — odhalí ikony, které jsou jinak skryté**
+
+```
+mcp__Claude_in_Chrome__computer.hover(tabId, coordinate=[935, 450])
+```
+
+Coordinates ukazují přibližně do středu obrázku. Bez hover-u jsou ikony průhledné a klik nezareaguje.
+
+**3) Klik na download tlačítko**
+
+```
+mcp__Claude_in_Chrome__computer.left_click(tabId, coordinate=[1284, 343])
+```
+
+Pozn.: Pokud máš `find` reference (`ref_XXXX`) tlačítka „Stáhnout obrázek v plné velikosti", můžeš použít `left_click(ref=ref_XXXX)` místo coordinates — ale **scroll_to + ref klik bez předchozího hover často selže**, protože ikony jsou viditelné jen v hover stavu.
+
+**4) Vyčkej 6–10 s a zkontroluj Downloads:**
 
 ```powershell
-$src = Get-ChildItem "$env:USERPROFILE\Downloads\gemini_cover*" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-$outPath = "[PRACOVNÍ_SLOŽKA]\gemini_cover_$([DateTimeOffset]::UtcNow.ToUnixTimeSeconds()).jpg"
-Copy-Item $src.FullName $outPath
-Write-Output "Saved: $outPath"
+Start-Sleep -Seconds 6
+$src = Get-ChildItem "$env:USERPROFILE\Downloads\Gemini_Generated_Image_*.png" |
+       Sort-Object LastWriteTime -Descending | Select-Object -First 1
+if (-not $src -or $src.LastWriteTime -lt (Get-Date).AddSeconds(-30)) {
+    Write-Output "[COVER-GEMINI] WARN — download neproběhl, zkouším znovu"
+    exit 2
+}
+$ts = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+$workDir = "$env:USERPROFILE\Documents\Claude-code\agro-covers"
+if (-not (Test-Path $workDir)) { New-Item -ItemType Directory -Path $workDir | Out-Null }
+$pngPath = "$workDir\[ARTICLE.slug]_cover_$ts.png"
+Copy-Item $src.FullName $pngPath -Force
+Write-Output "Saved: $pngPath ($((Get-Item $pngPath).Length/1MB) MB)"
 ```
 
-Ulož cestu jako `[IMG_PATH]` a MIME typ jako `image/jpeg` (případně `image/png`, podle
-skutečné přípony staženého souboru).
+Gemini stahuje soubor pod jménem `Gemini_Generated_Image_<8 znaků>.png` (PNG, typicky 5–10 MB). Soubor přistane v `~/Downloads/`.
+
+### Co dělat, když download neproběhne (retry strategie)
+
+| Příčina | Řešení |
+|---|---|
+| Hover proběhl mimo obrázek | Spusť `screenshot` znovu, ověř pozici obrázku, přesuň hover do skutečného středu |
+| Klik proběhl mimo button | Spusť `screenshot` po hoveru, zkontroluj viditelnost ikon, přepočítej coordinates pro tvůj screenshot rozměr |
+| Recyklovaná konverzace | Vrať se na Krok 3 a otevři **nový tab** přes `tabs_create_mcp` + `navigate` — nikdy nereuse chat, ve kterém už jsi generoval jeden obrázek |
+| Obrázek se ještě generuje | Před klikem ověř JS dotazem (`naturalWidth > 500 && complete === true`); jinak počkej dalších 20 s |
+
+**Nepoužívej:**
+- ❌ Synthetic `document.querySelector('button[aria-label="Stáhnout..."]').click()` — Chrome blokuje download pro `isTrusted: false` event
+- ❌ `canvas.toDataURL()` + `anchor.download` — stejný user-gesture problém
+- ❌ `fetch(blob_url)` nebo `XMLHttpRequest` — selže s „Failed to fetch" (extension worker ≠ page process)
+- ❌ Chunked base64 přes JS → PowerShell — auto-mode classifier to klasifikuje jako data exfiltration
+
+### Komprese a vizuální kontrola
+
+PNG z Gemini bývají 5–10 MB. Pro Cloudinary i pro rychlejší PUT je vhodné rovnou převést na JPG quality 85 (~1 MB):
+
+```powershell
+Add-Type -AssemblyName System.Drawing
+$jpgPath = $pngPath -replace '\.png$', '.jpg'
+$img = [System.Drawing.Image]::FromFile($pngPath)
+$codec = [System.Drawing.Imaging.ImageCodecInfo]::GetImageEncoders() |
+         Where-Object { $_.MimeType -eq "image/jpeg" }
+$encoderParams = New-Object System.Drawing.Imaging.EncoderParameters(1)
+$encoderParams.Param[0] = New-Object System.Drawing.Imaging.EncoderParameter(
+    [System.Drawing.Imaging.Encoder]::Quality, 85L)
+$img.Save($jpgPath, $codec, $encoderParams)
+$img.Dispose()
+```
+
+Aktualizuj `[IMG_PATH] = $jpgPath` a MIME na `image/jpeg`.
 
 **Vizuální kontrola:** otevři `[IMG_PATH]` přes `Read` (Claude je multimodální) a stručně
 zkontroluj, že obrázek odpovídá tématu článku a neobsahuje žádný rozbitý/nesmyslný text.
@@ -156,25 +250,11 @@ s očekávaným chováním, ne s chybou.
 
 ---
 
-## Krok 5 — Komprese (pokud >10 MB)
+## Krok 5 — Komprese (přeskoč, pokud už máš JPG z Kroku 4)
 
-Cloudinary free plan má limit 10 485 760 bytes. Pokud `[IMG_PATH]` přesahuje limit:
+Tento krok je už integrovaný v Kroku 4 (PNG → JPG quality 85). Pokud z nějakého důvodu pracuješ se surovým PNG > 10 MB, použij stejný postup jako v Kroku 4 pro převod na JPG.
 
-```powershell
-Add-Type -AssemblyName System.Drawing
-$srcPath = "[IMG_PATH]"
-$dstPath = "[IMG_PATH_BEZ_PŘÍPONY]_compressed.jpg"
-$img = [System.Drawing.Image]::FromFile($srcPath)
-$codec = [System.Drawing.Imaging.ImageCodecInfo]::GetImageEncoders() | Where-Object { $_.MimeType -eq "image/jpeg" }
-$encoderParams = New-Object System.Drawing.Imaging.EncoderParameters(1)
-$encoderParams.Param[0] = New-Object System.Drawing.Imaging.EncoderParameter([System.Drawing.Imaging.Encoder]::Quality, 85L)
-$img.Save($dstPath, $codec, $encoderParams)
-$img.Dispose()
-```
-
-Aktualizuj `[IMG_PATH]` na zkomprimovanou verzi (a `image/jpeg` jako MIME). AI generované
-obrázky jsou typicky pod 5 MB, takže tento krok bude většinou zbytečný — ber ho jako
-pojistku, ne jako standardní krok.
+Cloudinary free plan má limit 10 485 760 bytes. JPG quality 85 z Gemini PNG je typicky 0,9–1,2 MB, takže limit bezpečně procházíš.
 
 ---
 
@@ -310,15 +390,107 @@ Zobraz shrnutí v češtině:
 
 ---
 
+## Batch režim — paralelní generování více obrázků najednou
+
+Pokud uživatel (nebo scheduled task) potřebuje vygenerovat cover pro **více článků v jednom běhu** (typicky 3 z denní pipeline), použij tento režim místo opakovaného 3× spouštění celého skillu. Ušetří ~2,5 min na pipeline tím, že 3 Gemini generations běží paralelně místo sekvenčně.
+
+**Vstup:** pole 3 ID článků bez `cover_image_url` (získej z API GET v Kroku 1, vyber 3 nejstarší drafty).
+
+### Batch Krok 1 — Připrav 3 prompty (sériově, rychlé)
+
+Pro každý článek udělej **Krok 2** (sestav prompt podle titulku/obsahu). Výsledek: pole `[{articleId, slug, prompt}, ...]` × 3.
+
+### Batch Krok 2 — Otevři 3 taby + naviguj na Gemini (paralelně)
+
+V **jedné** message zavolej tyto MCP tooly paralelně (multiple tool calls v jedné odpovědi = concurrent execution):
+
+```
+mcp__Claude_in_Chrome__tabs_create_mcp()  →  tabId_1
+mcp__Claude_in_Chrome__tabs_create_mcp()  →  tabId_2
+mcp__Claude_in_Chrome__tabs_create_mcp()  →  tabId_3
+```
+
+Pak v další message paralelně naviguj všechny 3 taby:
+
+```
+navigate(tabId_1, "https://gemini.google.com/app")
+navigate(tabId_2, "https://gemini.google.com/app")
+navigate(tabId_3, "https://gemini.google.com/app")
+```
+
+Krátká pauza 4 s pro načtení stránek.
+
+Ulož si mapu `{articleId → tabId}` pro pozdější identifikaci.
+
+### Batch Krok 3 — Pošli 3 prompty paralelně
+
+V jedné message zavolej `javascript_tool` 3× paralelně, každý do svého tabu se svým promptem (stejný JS jako v Kroku 3 standardního flow).
+
+### Batch Krok 4 — Společné čekání
+
+Místo 3× `Start-Sleep 80s` (= 240 s sériově) udělej **jen jednu pauzu ~90 s** — všechny 3 Gemini chats generují obrázky souběžně na Google straně.
+
+```powershell
+Start-Sleep -Seconds 90
+```
+
+### Batch Krok 5 — Ověření že všechny 3 obrázky jsou hotové (paralelně)
+
+V jedné message spusť `javascript_tool` 3× paralelně, každý kontroluje `complete && naturalWidth > 500` ve svém tabu. Pokud některý ještě není hotový, počkej 20 s a zkontroluj znovu (max 2× retry).
+
+### Batch Krok 6 — Stáhni 3 obrázky **SÉRIOVĚ** (KRITICKÉ)
+
+**Pozor — paralelní download je velké riziko:** všechny 3 PNG by spadly do `~/Downloads` ve stejnou sekundu pod jménem `Gemini_Generated_Image_<random>.png` a nešlo by je párovat s články. Proto download dělej **jeden po druhém s 3 s pauzou**:
+
+```
+Pro každý article v batch:
+  1. snapshot stávajícího nejnovějšího Gemini souboru v Downloads
+  2. computer.hover(tabId, [935, 450])
+  3. computer.left_click(tabId, [1284, 343])
+  4. wait 8 s
+  5. najdi nový Gemini soubor (LastWriteTime > snapshot)
+  6. přesuň/přejmenuj na <slug>_cover_<ts>.png v pracovní složce
+  7. converze PNG → JPG quality 85
+```
+
+Tato fáze trvá ~3 × 10 s = 30 s — stále rychlejší než kompletní sériový flow.
+
+### Batch Krok 7 — Cloudinary upload (paralelně) + PUT update (paralelně)
+
+V jedné message spusť **3 paralelní PowerShell calls** pro Cloudinary upload. Po dokončení v další message **3 paralelní PUT** requesty pro nastavení `cover_image_url` + `status: published`.
+
+### Batch Krok 8 — Úklid + souhrnný report
+
+Smaž lokální soubory paralelně. Souhrn:
+
+```
+✅ Batch hotov — 3/3 cover images publikováno:
+
+  📰 [článek 1]: <cloudinary_url_1>
+  📰 [článek 2]: <cloudinary_url_2>
+  📰 [článek 3]: <cloudinary_url_3>
+
+⏱️ Celkový čas: ~3 min (oproti ~6 min sériově)
+```
+
+### Riziko a fallback
+
+- **Gemini rate limit:** Pro účet zvládá 3 souběžné generations. Pokud se některý prompt vrátí s chybou „too many requests", přepni daný článek do sériového fallbacku (opakuj Krok 3 standardního flow).
+- **Tab si nezapamatuje prompt:** pokud `javascript_tool` JS vrátí `ERROR: no editable`, počkej 3 s a opakuj — Gemini stránka se nestihla načíst.
+- **Klik na download stáhne starý cached obrázek:** pokud nový PNG se v Downloads neobjeví do 10 s, ověř že JS check `complete: true` opravdu prošel — možná byl false positive a obrázek se stahuje znova.
+
+---
+
 ## Chybové stavy
 
 | Stav | Příčina | Řešení |
 |---|---|---|
-| Žádný článek bez cover image | Všechny články mají obrázek | Informuj uživatele, ukonči gracefully |
+| Žádný článek bez cover image | Všechny články mají obrázek, nebo agro-journalist nezavolal POST do API | Spusť `agro-journalist` (Krok 5.5) a ověř články přes GET; ukonči gracefully |
 | AI_API_KEY chybí | Proměnná není nastavena | Požádej uživatele o nastavení tokenu |
 | Gemini odmítne / nevygeneruje | Politika obsahu, nejasný prompt | Zobecni prompt, zkus znovu (max 2×) |
 | Vygenerovaný obrázek neodpovídá tématu | Nejasný/abstraktní prompt | Konkretizuj scénu, zkus znovu (max 1×) |
-| Stažení obrázku selže (fetch/base64) | CORS, neplatná URL | Zkus `data:` variantu z `src`, nebo screenshot+crop jako záložní řešení |
-| Obrázek >10 MB | Vzácné u AI generování | Automatická komprese JPEG quality 85 |
+| Klik na download neudělal nic | Synthetic JS click — Chrome blokuje | **Použij `computer.hover` → `computer.left_click([1284, 343])`** (CDP trusted event) |
+| Download stáhl prázdný / starý obrázek | Recyklovaná konverzace | Otevři **nový tab** přes `tabs_create_mcp` + `navigate` a Krok 3 zopakuj |
+| Image `complete: false` při kliku | Generování ještě běží | Počkej 20–30 s a zkontroluj znovu před klikem |
 | Cloudinary upload selže | Špatné credentials / síť | Zaznamenej chybu, neukončuj — zkus jednou znovu |
 | PUT selže | Chybné ID / server error | Zkus jednou znovu, pak nahlas chybu |
