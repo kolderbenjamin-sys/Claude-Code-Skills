@@ -1,5 +1,19 @@
 [
   {
+    "id": 2,
+    "label": "ÚLEVY NA DOTACÍCH",
+    "text": "Ministerstvo kvůli suchu zmírnilo podmínky dotací pro nejhůř zasažené oblasti.",
+    "source": "profifarmar.cz",
+    "added_at": "2026-08-15 11:59:59"
+  },
+  {
+    "id": 3,
+    "label": "VÝNOSY DRŽÍ",
+    "text": "Sklizeň obilovin a řepky běží naplno, výnosy se navzdory suchu drží blízko loňského průměru.",
+    "source": "profifarmar.cz",
+    "added_at": "2026-08-15 12:00:28"
+  },
+  {
     "id": 4,
     "label": "PRVNÍ AI PRO FARMU",
     "text": "Agdata spouští AGÁTU, umělou inteligenci pro řízení celé farmy — data firmy využívá třetina českých zemědělců.",
