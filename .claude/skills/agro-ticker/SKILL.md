@@ -195,7 +195,7 @@ Když se nic nezměnilo (všechno duplicita, pásek plný a nemá co ustoupit), 
 
 ## Známé omezení — mazání
 
-`aktuality_webhook.php` umí **jen POST**. `DELETE` a `PUT` existují pouze na `/api/admin/aktuality.php`, kam se servisním klíčem nedostaneš (`401 Neplatná nebo vypršená session`) — ten endpoint chce session z přihlášení do adminu.
+`aktuality_webhook.php` umí **jen POST**. `DELETE` a `PUT` existují pouze na `/api/admin/aktuality.php`, kam se servisním klíčem nedostaneš (`401 Neplatná nebo vypršená session`) — ten endpoint chce session z přihlášení jménem a heslem. **Tudy se nechodí**: automatizace nemá držet heslo do adminu.
 
 Dokud to platí:
 
@@ -203,7 +203,9 @@ Dokud to platí:
 - co má jít pryč, vypíše jako `! smaž ručně v adminu: #3 SKLIZEŇ (prošlá)`,
 - při plném pásku neudělá nic a napíše proč.
 
-Jak to dorovnat, je v [`reference/api-patch.md`](reference/api-patch.md) — stačí doplnit `DELETE` do webhooku (pár řádků PHP). Po nasazení běží rotace úplně sama; ve skriptu se jen přepne `mutate()` z `ADMIN_URL` na `WEBHOOK_URL`.
+Prakticky to ale pásek neubíjí: týdenní dávka pěti nových položek stejně vytlačí všechno staré, jakmile mazání začne fungovat. Do té doby se z pásku stane archiv a je potřeba ho jednou týdně ručně vysypat.
+
+Jediné čisté řešení bez hesel je doplnit `DELETE` do webhooku — hotový kód i kontrakt je v [`reference/api-patch.md`](reference/api-patch.md). Po nasazení běží rotace úplně sama; ve skriptu se přepne `mutate()` a `can_mutate()` z `ADMIN_URL` na `WEBHOOK_URL`.
 
 ---
 
