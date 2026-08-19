@@ -1,5 +1,5 @@
 ---
-name: agro-ticker
+name: agro-aktuality
 description: "Plní a udržuje Aktuality (Ticker) na Profifarmar.cz — červený běžící pruh nahoře na titulce, kam se vejde max 5 krátkých zpráv (label do 50 znaků, text do 200 znaků). Jednou týdně (neděle v noci) neinteraktivním během načte, co v pásku běží, vybere pět nejdůležitějších zpráv uplynulého týdne z vlastních publikovaných článků a doplní je rešerší z ověřených zdrojů (MZe, SZIF, ČHMÚ, ČSÚ, Evropská komise), napíše je do stylu pásku, ohlídá limity délky, zahodí duplicity a prošlé položky a odešle je přes /api/aktuality_webhook.php (POST/PUT/DELETE pod servisním klíčem). Určeno pro Claude Code cloud Routine (Linux, python3), ale funguje i ručně z chatu. Použij tento skill vždy, když uživatel chce dát něco do pásku, aktualizovat pásek, přidat aktualitu, změnit běžící lištu nebo naplnit ticker na profifarmaru. Trigger keywords: agro ticker, attention pásek, pásek na webu, běžící pruh, červený pruh, aktuality profifarmar, přidej aktualitu, naplň ticker, aktualizuj pásek, ticker routine, breaking news lišta, zpravodajský pruh."
 ---
 
@@ -230,12 +230,14 @@ Kompletní ověřený kontrakt API (včetně toho, co server hlídá a co ne) je
 
 ## Nastavení Routine (cloud)
 
+Rutina se jmenuje **profifarmář-aktuality** a spravuje ji uživatel — čas i název si nastavil sám, takže se podle nich neřiď a nepřenastavuj je.
+
 - **Repozitář:** `kolderbenjamin-sys/Claude-Code-Skills`
 - **Environment:** `AI_API_KEY`
-- **Prompt:** `Spusť skill agro-ticker: aktualizuj pásek aktualit na Profifarmar.cz.`
-- **Čas:** jednou týdně, **neděle 23:00 Europe/Prague** — cron `0 21 * * 0` (letní čas). V zimním čase je stejná hodina `0 22 * * 0`; po přechodu na SEČ cron uprav, jinak běh spadne na 22:00.
+- **Prompt:** `Spusť skill agro-aktuality: aktualizuj pásek aktualit na Profifarmar.cz.`
+- **Perioda:** jednou týdně. Návrh při zakládání byla neděle v noci — týden je uzavřený, všechny články jsou venku a pásek naskočí čerstvý na pondělní ráno, kdy je na webu největší provoz.
 
-Nedělní noc je zvolená schválně: týden je uzavřený, všechny články jsou venku a pásek naskočí čerstvý na pondělní ráno, kdy je na webu největší provoz. Položky pak drží celý pracovní týden.
+> **Pozor na letní čas.** Cron běží v UTC, takže při přechodu na SEČ (poslední říjnovou neděli) se běh sám posune o hodinu dřív. Po přechodu je potřeba cron o hodinu posunout zpět.
 
 Když je potřeba pásek protočit mimo pořadí (mimořádné opatření, velká zpráva ve středu), spusť skill ručně — rutina to nijak nerozbije, jen v neděli najde méně místa.
 
