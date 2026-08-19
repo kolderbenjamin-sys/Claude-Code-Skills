@@ -5,5 +5,19 @@
     "text": "Startup Agdata spouští AGÁTU, umělou inteligenci pro řízení celé farmy. Jeho data dnes využívá třetina profesionálních českých zemědělců na 1,7 milionu hektarů.",
     "source": "profifarmar.cz",
     "added_at": "2026-08-19 12:53:26"
+  },
+  {
+    "id": 5,
+    "label": "TECHNIKA",
+    "text": "Nová řada řezaček CLAAS Jaguar 1000 zvládne až 500 tun řezanky za hodinu. Model Jaguar 1200 se zapsal do Guinnessovy knihy se 4 515 tunami senáže za dvanáct hodin.",
+    "source": "profifarmar.cz",
+    "added_at": "2026-08-19 13:08:13"
+  },
+  {
+    "id": 6,
+    "label": "PRÁCE",
+    "text": "Českému zemědělství chybí kolem pěti tisíc lidí, nejhůř se shánějí traktoristé a obsluha strojů. Mzdy rostou, na celostátní průměr ale ztrácejí přes deset tisíc korun.",
+    "source": "profifarmar.cz",
+    "added_at": "2026-08-19 13:08:13"
   }
 ]

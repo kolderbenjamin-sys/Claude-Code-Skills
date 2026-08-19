@@ -47,10 +47,11 @@ ADMIN_URL = "https://profifarmar.cz/api/admin/aktuality.php"  # PUT/DELETE, zat�
 MAX_ITEMS = 5
 LABEL_MAX = 50
 TEXT_MAX = 200
-# Redakční doporučení — tvrdý strop je LABEL_MAX/TEXT_MAX, tohle jen varuje.
-LABEL_SOFT_MAX = 20
-TEXT_SOFT_MIN = 80
-TEXT_SOFT_MAX = 170
+# Redakční doporučení — LABEL_MAX/TEXT_MAX je jen horní hranice od API,
+# ne cíl. Pásek se hýbe, takže vyhrává kratší a údernější znění.
+LABEL_SOFT_MAX = 25    # 2–3 slova
+TEXT_SOFT_MIN = 45
+TEXT_SOFT_MAX = 130    # nad tím zpráva v běžícím pruhu ztrácí úder
 
 PRAGUE = ZoneInfo("Europe/Prague")
 TIMEOUT = 30
@@ -218,14 +219,21 @@ def validate(label: str, text: str) -> list[str]:
 
 def warnings(label: str, text: str) -> list[str]:
     out: list[str] = []
-    if len(label) > LABEL_SOFT_MAX:
-        out.append(f"label {len(label)} znaků — v běžícím pruhu se lépe čte do {LABEL_SOFT_MAX}")
+    words = len(label.split())
+    if len(label) > LABEL_SOFT_MAX or words > 3:
+        out.append(f"label {len(label)} znaků / {words} slova — drž se 2–3 slov do {LABEL_SOFT_MAX} znaků")
     if label != label.upper():
         out.append("label není verzálkami (zbytek pásku je psaný VELKÝMI)")
     if len(text) > TEXT_SOFT_MAX:
-        out.append(f"text {len(text)} znaků — ideál je {TEXT_SOFT_MIN}–{TEXT_SOFT_MAX}")
+        out.append(
+            f"text {len(text)} znaků — zkrať pod {TEXT_SOFT_MAX}; limit {TEXT_MAX} je horní "
+            "hranice od API, ne cíl"
+        )
     if len(text) < TEXT_SOFT_MIN:
         out.append(f"text {len(text)} znaků — pod {TEXT_SOFT_MIN} působí útržkovitě")
+    sentences = len([p for p in re.split(r"[.!?]+", text) if p.strip()])
+    if sentences > 2:
+        out.append(f"{sentences} věty — pásek unese jednu, výjimečně dvě")
     if not text.rstrip().endswith((".", "!", "%")):
         out.append("text nekončí tečkou")
     return out
@@ -533,7 +541,9 @@ def main() -> int:
 
     p = sub.add_parser("apply", help="rotace pásku podle JSON návrhu")
     p.add_argument("--file", required=True, help="JSON se seznamem [{label, text, source}]")
-    p.add_argument("--max-age-days", type=int, default=7, help="starší položky se zahodí (výchozí 7)")
+    p.add_argument("--max-age-days", type=int, default=6,
+                   help="starší položky se zahodí (výchozí 6 — o den míň než týdenní perioda, "
+                        "aby minulá dávka při nedělním běhu vždy propadla)")
     p.add_argument("--dedupe-days", type=int, default=14, help="jak dlouho zpět se hlídá duplicita (výchozí 14)")
     p.add_argument("--similarity", type=float, default=0.75, help="práh podobnosti pro duplicitu (0–1)")
     p.add_argument("--log", help="cesta k posted-ticker-log.json")

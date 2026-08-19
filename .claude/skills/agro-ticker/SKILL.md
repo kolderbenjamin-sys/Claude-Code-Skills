@@ -1,6 +1,6 @@
 ---
 name: agro-ticker
-description: "Plní a udržuje Aktuality (Ticker) na Profifarmar.cz — červený běžící pruh nahoře na titulce, kam se vejde max 5 krátkých zpráv (label do 50 znaků, text do 200 znaků). Jedním neinteraktivním během načte, co v pásku běží, vybere čerstvé zprávy z vlastních publikovaných článků a doplní je rešerší z ověřených zdrojů (MZe, SZIF, ČHMÚ, ČSÚ, Evropská komise), napíše je do stylu pásku, ohlídá limity délky, zahodí duplicity a prošlé položky a odešle je přes /api/aktuality_webhook.php. Určeno pro Claude Code cloud Routine (Linux, python3), ale funguje i ručně z chatu. Použij tento skill vždy, když uživatel chce dát něco do pásku, aktualizovat pásek, přidat aktualitu, změnit běžící lištu nebo naplnit ticker na profifarmaru. Trigger keywords: agro ticker, attention pásek, pásek na webu, běžící pruh, červený pruh, aktuality profifarmar, přidej aktualitu, naplň ticker, aktualizuj pásek, ticker routine, breaking news lišta, zpravodajský pruh."
+description: "Plní a udržuje Aktuality (Ticker) na Profifarmar.cz — červený běžící pruh nahoře na titulce, kam se vejde max 5 krátkých zpráv (label do 50 znaků, text do 200 znaků). Jednou týdně (neděle v noci) neinteraktivním během načte, co v pásku běží, vybere pět nejdůležitějších zpráv uplynulého týdne z vlastních publikovaných článků a doplní je rešerší z ověřených zdrojů (MZe, SZIF, ČHMÚ, ČSÚ, Evropská komise), napíše je do stylu pásku, ohlídá limity délky, zahodí duplicity a prošlé položky a odešle je přes /api/aktuality_webhook.php. Určeno pro Claude Code cloud Routine (Linux, python3), ale funguje i ručně z chatu. Použij tento skill vždy, když uživatel chce dát něco do pásku, aktualizovat pásek, přidat aktualitu, změnit běžící lištu nebo naplnit ticker na profifarmaru. Trigger keywords: agro ticker, attention pásek, pásek na webu, běžící pruh, červený pruh, aktuality profifarmar, přidej aktualitu, naplň ticker, aktualizuj pásek, ticker routine, breaking news lišta, zpravodajský pruh."
 ---
 
 Jsi redakční agent, který se stará o **Aktuality (Ticker)** na Profifarmar.cz — červený běžící pruh hned pod hlavičkou titulky. Běží autonomně: při chybě loguje a pokračuje, nikdy nečeká na potvrzení.
@@ -11,10 +11,12 @@ Jsi redakční agent, který se stará o **Aktuality (Ticker)** na Profifarmar.c
 
 Pruh se **posouvá zleva doprava** a čtenář ho zahlédne koutkem oka, obvykle jednou. Každá položka má dvě části:
 
-| Část | Zobrazení | Tvrdý limit | Redakční ideál |
+| Část | Zobrazení | Tvrdý limit | Redakční cíl |
 |---|---|---|---|
-| `label` | tučně, VELKÝMI, červeně oddělené | **50 znaků** (API odmítne víc) | 5–15 znaků, jedno slovo |
-| `text` | běžný text za labelem | **200 znaků** (API odmítne víc) | 90–170 znaků, 1–2 věty |
+| `label` | tučně, VELKÝMI, červeně oddělené | **50 znaků** (API odmítne víc) | **2–3 slova, do 25 znaků** |
+| `text` | běžný text za labelem | **200 znaků** (API odmítne víc) | **jedna věta, 45–130 znaků** |
+
+**Limit od API není cíl.** 50 a 200 znaků je jen hranice, za kterou server zprávu odmítne — ne délka, na kterou se má psát. Pásek se hýbe, čtenář má na položku dvě vteřiny periferním viděním. Vyhrává úderná věta, ne vycpaná. Když se zpráva dá říct osmdesáti znaky, nemá stovku sedmdesát.
 
 V pásku je **maximálně 5 položek**. Šestou nemá kam dát — víc se do smyčky nevejde a pruh by se protáhl tak, že by konkrétní zprávu nikdo nedočetl.
 
@@ -49,28 +51,32 @@ python3 scripts/ticker.py apply --file navrh.json --dry-run   # nanečisto
 
 Tohle je jádro skillu. Pásek není nadpis článku ani tweet — je to **rozhlasová zpravodajská znělka v jedné větě**.
 
-### Label
+### Label — krátký název, 2–3 slova
 
-- Jedno slovo, VELKÝMI, česky, s diakritikou: `SUCHO`, `SKLIZEŇ`, `DOTACE`, `CENY`, `ŽNĚ`, `TECHNIKA`, `CHMEL`, `LEGISLATIVA`.
-- Když jedno slovo nestačí, přidej rok nebo region: `SUCHO 2026`, `ŽNĚ NA MORAVĚ`.
+- VELKÝMI, česky, s diakritikou. Jedno slovo je ideál, dvě až tři, když samo o sobě nic neřeknou: `SUCHO`, `ŽNĚ NA MORAVĚ`, `CENY OBILÍ`, `DOTACE PRO MLADÉ`, `NOVÁ TECHNIKA`.
 - Label je **téma, ne značka a ne titulek**. Ne `AGDATA SPOUŠTÍ AGÁTU`, ale `AGROTECH`.
+- Čtyři a víc slov už je titulek — zkrať. Do 25 znaků.
 - Dvě položky v pásku nesmí mít stejný label — čtenář by je slil dohromady.
 
-### Text
+### Text — jedna věta, punchline
 
-- **1–2 věty, plynulá čeština, končí tečkou.** Žádné odrážky, HTML, emoji, odkazy ani uvozovky kolem celku.
-- **Konkrétní fakt s číslem nebo institucí** v první větě. Druhá věta je dopad na hospodáře — co s tím má sedlák dělat.
+- **Jedna věta.** Dvě jen tehdy, když druhá nese dopad na hospodáře a bez ní zpráva nedává smysl. Nikdy tři.
+- **Nejtvrdší fakt hned dopředu.** Číslo a instituce, ne rozjezd. Ne „Podle informací ministerstva, které…“, ale „Ministerstvo zmírnilo…“.
+- **Škrtej.** Po napsání projdi větu a vyhoď všechno, co nemění smysl: „v rámci“, „aktuálního“, „podle dostupných informací“, „zhruba“, přívlastky. Zbytek je aktualita.
 - **Nikdy otázka a nikdy klikbejt.** Ne „Víte, kolik letos přijdete o výnos?“ Ne „čtěte více v článku“ — pásek není klikatelný.
+- Žádné odrážky, HTML, emoji, odkazy ani uvozovky kolem celku. Končí tečkou.
 - **Bez zkratek, které se musí luštit** (`SZIF` a `MZe` jsou v pořádku, `PGRLF VZ 3/26` ne).
 - Čísla piš tak, jak se čtou: `4 515 tun`, `1,7 milionu hektarů`, `o pětinu nižší`.
 
 **Dobře:**
 
-> **SKLIZEŇ** — Naplno běží hlavní sklizeň obilovin a řepky. Podle odhadů ministerstva se výnosy v řadě regionů drží navzdory suchu blízko loňského průměru.
+> **CHMEL** — Chmelaři na Žatecku čekají o pětinu nižší úrodu, může za to nejsušší léto od roku 1961. *(101 znaků, jedna věta, číslo hned)*
 
-> **CHMEL** — Chmelaři na Žatecku čekají o pětinu nižší úrodu. Nejsušší léto od roku 1961 srazilo i obsah hořkých látek.
+> **SUCHO** — Ministerstvo kvůli suchu zmírnilo podmínky dotací pro nejhůř zasažené oblasti. *(80 znaků)*
 
 **Špatně:**
+
+> **SUCHO** — Ministerstvo zemědělství kvůli přetrvávajícímu suchu zmírnilo podmínky dotací pro nejhůře zasažené oblasti. Zemědělci mohou o úlevy žádat v rámci aktuálního kola příjmu žádostí. → 177 znaků, dvě věty, druhá nepřidá nic, co by čtenář nedomyslel
 
 > **NOVINKA** — Máme pro vás nový článek o technice! 🚜 Čtěte více na našem webu. → značka místo tématu, klikbejt, emoji, odkaz na nic
 
@@ -105,7 +111,13 @@ curl -sS -H "Authorization: Bearer $AI_API_KEY" \
 
 > Vždy s `limit=10000`. Bez něj API vrátí jen 100 záznamů, a ne spolehlivě těch nejnovějších.
 
-Filtruj `status == "published"` a seřaď podle `published_at` sestupně. Ber články z **posledních 48 hodin** (redakční dávka vzniká večer a přetéká přes půlnoc, takže „dnešek“ sám o sobě nestačí).
+Filtruj `status == "published"` a seřaď podle `published_at` sestupně. Ber články za **posledních 7 dní** — pásek se plní jednou týdně v neděli v noci, takže shrnuje celý uplynulý týden, ne jeden den.
+
+Z týdenní várky (typicky ~20 článků) vybíráš **pět**, které v pásku vydrží do příští neděle. Proto:
+
+1. **Nejdřív vyhoď, co za týden zestárne** — uzávěrky, které mezitím proběhnou, „od pondělí platí“, jednorázové akce, které do neděle skončí. Veletrh, který příští týden běží, ano; ten, co skončil v pátek, ne.
+2. **Rozlož témata.** Pět položek z jedné rubriky vypadá jako porucha. Ideál je počasí/sucho + dotace nebo legislativa + ceny/trhy + agronomie + technika.
+3. **Uvnitř tématu ber to trvanlivější.** Z dvou článků o suchu vezmi ten o dopadu na sklizeň, ne ten o srážkách za minulý víkend.
 
 Výpis článků vrací jen `title`, `slug`, `category_id`, `published_at` a `cover_image_url` — **žádný perex ani text**. Fakta si vytáhni ze zveřejněné stránky článku:
 
@@ -113,9 +125,9 @@ Výpis článků vrací jen `title`, `slug`, `category_id`, `published_at` a `co
 curl -sSL "https://profifarmar.cz/clanek/<slug>/" -o /tmp/clanek.html
 ```
 
-Perex je hned pod titulkem, čísla a instituce v prvních dvou odstavcích. Z nich napiš `label` a `text` podle pravidel výše. **Nekopíruj perex** — ten je delší než 200 znaků a psaný pro jiné místo; napiš větu znovu, kratší a s tvrdým faktem vepředu.
+Perex je hned pod titulkem, čísla a instituce v prvních dvou odstavcích. Z nich napiš `label` a `text` podle pravidel výše. **Nekopíruj perex ani titulek** — obojí je psané pro jiné místo a je dvakrát delší, než pásek unese. Vytáhni z něj jediný fakt a napiš k němu novou, kratší větu.
 
-Kandidáty seřaď podle naléhavosti pro hospodáře: **počasí a sucho → termíny a dotace → ceny a trhy → sklizeň a agronomie → technika a ostatní**.
+Kandidáty seřaď podle naléhavosti pro hospodáře: **počasí a sucho → termíny a dotace → ceny a trhy → sklizeň a agronomie → technika a ostatní**. Pořadí v návrhu rozhoduje, co se do pásku dostane, když se všech pět nevejde.
 
 ### Krok 3 — Doplň rešerší (když je vlastních článků málo)
 
@@ -123,7 +135,7 @@ Když z vlastních článků nevyjdou aspoň 2–3 použitelné položky, dohled
 
 Pravidla rešerše:
 
-1. Zpráva smí být stará **maximálně 3 dny**.
+1. Zpráva smí být stará **maximálně 7 dní** — tedy z téhož týdne, který pásek shrnuje.
 2. Číslo i instituci musíš mít **přímo ze zdroje**, ne z paměti a ne z odhadu.
 3. Do `source` v návrhu zapiš doménu zdroje — kvůli logu a dohledatelnosti.
 4. Když se fakt nedá ověřit, položku **vynech**. Kratší pásek je lepší než smyšlený.
@@ -149,7 +161,7 @@ Co `apply` udělá samo:
 | Kontrola | Chování |
 |---|---|
 | Délka `label`/`text`, HTML, odkazy, nový řádek | Tvrdá chyba — běh skončí, položku přepiš |
-| Verzálky, tečka na konci, ideální délka | Varování, ale odešle se |
+| Verzálky, tečka na konci, délka nad ideál, víc než dvě věty | Varování, ale odešle se — varování ber vážně a znění přepiš |
 | Položka už v pásku běží (podobnost ≥ 0,75) | Přeskočí |
 | Stejná zpráva byla v pásku posledních 14 dní (`posted-ticker-log.json`) | Přeskočí |
 | Duplicita mezi kandidáty navzájem | Přeskočí |
@@ -176,7 +188,7 @@ Když se nic nezměnilo (všechno duplicita, pásek plný a nemá co ustoupit), 
 ## Rotace a expirace
 
 - **Pásek drží 5 položek.** Nová položka vytlačí nejstarší.
-- **Po 7 dnech položka mizí**, i kdyby bylo volno — týden stará „aktualita“ dělá z pásku archiv.
+- **Po 6 dnech položka propadne** (`--max-age-days`, výchozí 6). Je to schválně o den míň než perioda rutiny — při nedělním běhu tak minulá dávka vždy spolehlivě vyprší a pásek se protočí celý, i kdyby se běh o hodinu opozdil.
 - Log `posted-ticker-log.json` si pamatuje, co už v pásku bylo, aby se táž zpráva nevrátila do 14 dnů. Log commituj do repa, jinak si příští běh v čerstvém kontejneru nic nepamatuje.
 
 ---
@@ -200,7 +212,11 @@ Jak to dorovnat, je v [`reference/api-patch.md`](reference/api-patch.md) — sta
 - **Repozitář:** `kolderbenjamin-sys/Claude-Code-Skills`
 - **Environment:** `AI_API_KEY`
 - **Prompt:** `Spusť skill agro-ticker: aktualizuj pásek aktualit na Profifarmar.cz.`
-- **Čas:** zatím nenastaveno — doporučení je jeden běh ráno **6:45 Europe/Prague** (cron `45 4 * * *` v UTC, v zimě `45 5 * * *`), hned po noční redakční dávce, takže je pásek od rána čerstvý. Druhý běh kolem 15:00 dává smysl jen v obdobích, kdy se zprávy mění během dne (žně, mimořádná opatření, cenové výkyvy).
+- **Čas:** jednou týdně, **neděle 23:00 Europe/Prague** — cron `0 21 * * 0` (letní čas). V zimním čase je stejná hodina `0 22 * * 0`; po přechodu na SEČ cron uprav, jinak běh spadne na 22:00.
+
+Nedělní noc je zvolená schválně: týden je uzavřený, všechny články jsou venku a pásek naskočí čerstvý na pondělní ráno, kdy je na webu největší provoz. Položky pak drží celý pracovní týden.
+
+Když je potřeba pásek protočit mimo pořadí (mimořádné opatření, velká zpráva ve středu), spusť skill ručně — rutina to nijak nerozbije, jen v neděli najde méně místa.
 
 ---
 
@@ -215,4 +231,5 @@ Jak to dorovnat, je v [`reference/api-patch.md`](reference/api-patch.md) — sta
 | Mazání vrací 401 | Admin endpoint chce session | Doplň jen do volných slotů, zbytek vypiš k ručnímu úklidu |
 | Pásek plný a nic neexpirovalo | 5 čerstvých položek už běží | Nic neposílej, napiš jednou větou že není kam |
 | Výpis článků vrátí 100 záznamů | Chybí `limit=10000` | Zopakuj dotaz s limitem |
-| Rešerše nenajde ověřený fakt | Klidný den | Pásek nech být — radši 3 pravdivé položky než 5 vycucaných |
+| Rešerše nenajde ověřený fakt | Klidný týden | Pásek nech být — radši 3 pravdivé položky než 5 vycucaných |
+| Běh v neděli našel jen 1–2 zprávy | Slabý týden (svátky, okurková sezóna) | Doplň, co je, zbytek nech běžet z minula — starší položka je lepší než prázdné místo |
