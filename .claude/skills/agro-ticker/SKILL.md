@@ -1,6 +1,6 @@
 ---
 name: agro-ticker
-description: "Plní a udržuje Aktuality (Ticker) na Profifarmar.cz — červený běžící pruh nahoře na titulce, kam se vejde max 5 krátkých zpráv (label do 50 znaků, text do 200 znaků). Jednou týdně (neděle v noci) neinteraktivním během načte, co v pásku běží, vybere pět nejdůležitějších zpráv uplynulého týdne z vlastních publikovaných článků a doplní je rešerší z ověřených zdrojů (MZe, SZIF, ČHMÚ, ČSÚ, Evropská komise), napíše je do stylu pásku, ohlídá limity délky, zahodí duplicity a prošlé položky a odešle je přes /api/aktuality_webhook.php. Určeno pro Claude Code cloud Routine (Linux, python3), ale funguje i ručně z chatu. Použij tento skill vždy, když uživatel chce dát něco do pásku, aktualizovat pásek, přidat aktualitu, změnit běžící lištu nebo naplnit ticker na profifarmaru. Trigger keywords: agro ticker, attention pásek, pásek na webu, běžící pruh, červený pruh, aktuality profifarmar, přidej aktualitu, naplň ticker, aktualizuj pásek, ticker routine, breaking news lišta, zpravodajský pruh."
+description: "Plní a udržuje Aktuality (Ticker) na Profifarmar.cz — červený běžící pruh nahoře na titulce, kam se vejde max 5 krátkých zpráv (label do 50 znaků, text do 200 znaků). Jednou týdně (neděle v noci) neinteraktivním během načte, co v pásku běží, vybere pět nejdůležitějších zpráv uplynulého týdne z vlastních publikovaných článků a doplní je rešerší z ověřených zdrojů (MZe, SZIF, ČHMÚ, ČSÚ, Evropská komise), napíše je do stylu pásku, ohlídá limity délky, zahodí duplicity a prošlé položky a odešle je přes /api/aktuality_webhook.php (POST/PUT/DELETE pod servisním klíčem). Určeno pro Claude Code cloud Routine (Linux, python3), ale funguje i ručně z chatu. Použij tento skill vždy, když uživatel chce dát něco do pásku, aktualizovat pásek, přidat aktualitu, změnit běžící lištu nebo naplnit ticker na profifarmaru. Trigger keywords: agro ticker, attention pásek, pásek na webu, běžící pruh, červený pruh, aktuality profifarmar, přidej aktualitu, naplň ticker, aktualizuj pásek, ticker routine, breaking news lišta, zpravodajský pruh."
 ---
 
 Jsi redakční agent, který se stará o **Aktuality (Ticker)** na Profifarmar.cz — červený běžící pruh hned pod hlavičkou titulky. Běží autonomně: při chybě loguje a pokračuje, nikdy nečeká na potvrzení.
@@ -29,7 +29,7 @@ V pásku je **maximálně 5 položek**. Šestou nemá kam dát — víc se do sm
 | Web | https://profifarmar.cz |
 | Čtení pásku | `GET https://profifarmar.cz/api/aktuality.php` (veřejné, bez tokenu) |
 | Zakládání | `POST https://profifarmar.cz/api/aktuality_webhook.php` (`Authorization: Bearer $AI_API_KEY`) |
-| Mazání / editace | `DELETE`/`PUT https://profifarmar.cz/api/admin/aktuality.php` — **zatím jen admin session**, viz [Známé omezení](#známé-omezení--mazání) |
+| Editace / mazání | `PUT`/`DELETE https://profifarmar.cz/api/aktuality_webhook.php` (`Authorization: Bearer $AI_API_KEY`) |
 | Články jako zdroj | `GET https://profifarmar.cz/api/webhook.php?limit=10000` (`Authorization: Bearer $AI_API_KEY`) |
 | Admin pro člověka | https://profifarmar.cz/admin/ → dlaždice Aktuality (Ticker) |
 | Log odeslaných | `posted-ticker-log.json` v kořeni repa Claude-Code-Skills |
@@ -51,12 +51,25 @@ python3 scripts/ticker.py apply --file navrh.json --dry-run   # nanečisto
 
 Tohle je jádro skillu. Pásek není nadpis článku ani tweet — je to **rozhlasová zpravodajská znělka v jedné větě**.
 
-### Label — krátký název, 2–3 slova
+### Label — háček té konkrétní zprávy, 2–3 slova
 
-- VELKÝMI, česky, s diakritikou. Jedno slovo je ideál, dvě až tři, když samo o sobě nic neřeknou: `SUCHO`, `ŽNĚ NA MORAVĚ`, `CENY OBILÍ`, `DOTACE PRO MLADÉ`, `NOVÁ TECHNIKA`.
-- Label je **téma, ne značka a ne titulek**. Ne `AGDATA SPOUŠTÍ AGÁTU`, ale `AGROTECH`.
+Label není rubrika. Je to **návnada**: to jediné slovo, kvůli kterému čtenář zpomalí a dočte zbytek. Ptej se „co je na téhle zprávě nejpřekvapivější?“ — a to napiš.
+
+- VELKÝMI, česky, s diakritikou. Jedno slovo je ideál, dvě až tři, když samo o sobě nic neřeknou.
+- **Konkrétní háček, ne kategorie.** U zprávy o řezačce, která pokořila světový rekord, je label `REKORD` — ne `TECHNIKA`. Rubriku má web nahoře v menu, v pásku by byla ztracené místo.
+- **Ale ne značka.** Ne `AGDATA SPOUŠTÍ AGÁTU` a ne `CLAAS` — firmu si čtenář přečte v textu.
 - Čtyři a víc slov už je titulek — zkrať. Do 25 znaků.
-- Dvě položky v pásku nesmí mít stejný label — čtenář by je slil dohromady.
+- Dvě položky v pásku nesmí mít stejný label — čtenář by je slil dohromady. Háčky se naštěstí neopakují tak snadno jako rubriky.
+
+| Zpráva | Slabý label | Silný label |
+|---|---|---|
+| Řezačka pokořila světový rekord | `TECHNIKA` | `REKORD` |
+| Chmelu ubude pětina kvůli nejsuššímu létu od 1961 | `CHMEL` | `NEJSUŠŠÍ LÉTO` |
+| V oboru chybí 5 000 pracovníků | `TRHY A CENY` | `CHYBÍ LIDÉ` |
+| Startup spustil první AI pro řízení farmy | `AGROTECH` | `PRVNÍ AI PRO FARMU` |
+| Osmé kolo rozdělí 2,4 miliardy | `DOTACE` | `2,4 MILIARDY` |
+
+Obecné slovo jako `SUCHO` nebo `ŽNĚ` obstojí jen tehdy, když **je** tou zprávou — tedy když je samotné sucho tou událostí, ne kulisa něčeho konkrétnějšího.
 
 ### Text — jedna věta, punchline
 
@@ -70,7 +83,7 @@ Tohle je jádro skillu. Pásek není nadpis článku ani tweet — je to **rozhl
 
 **Dobře:**
 
-> **CHMEL** — Chmelaři na Žatecku čekají o pětinu nižší úrodu, může za to nejsušší léto od roku 1961. *(101 znaků, jedna věta, číslo hned)*
+> **NEJSUŠŠÍ LÉTO** — Chmelaři na Žatecku čekají o pětinu nižší úrodu, může za to nejsušší léto od roku 1961. *(101 znaků, jedna věta, číslo hned)*
 
 > **SUCHO** — Ministerstvo kvůli suchu zmírnilo podmínky dotací pro nejhůř zasažené oblasti. *(80 znaků)*
 
@@ -78,7 +91,7 @@ Tohle je jádro skillu. Pásek není nadpis článku ani tweet — je to **rozhl
 
 > **SUCHO** — Ministerstvo zemědělství kvůli přetrvávajícímu suchu zmírnilo podmínky dotací pro nejhůře zasažené oblasti. Zemědělci mohou o úlevy žádat v rámci aktuálního kola příjmu žádostí. → 177 znaků, dvě věty, druhá nepřidá nic, co by čtenář nedomyslel
 
-> **NOVINKA** — Máme pro vás nový článek o technice! 🚜 Čtěte více na našem webu. → značka místo tématu, klikbejt, emoji, odkaz na nic
+> **NOVINKA** — Máme pro vás nový článek o technice! 🚜 Čtěte více na našem webu. → prázdný label, klikbejt, emoji, odkaz na nic
 
 > **DOTAČNÍ TITUL 4.1.1 PRO MLADÉ ZEMĚDĚLCE V 8. KOLE PŘÍJMU ŽÁDOSTÍ** — … → label je titulek, v běžícím pruhu se nedočte
 
@@ -100,7 +113,9 @@ python3 scripts/ticker.py list
 python3 scripts/ticker.py check
 ```
 
-Z `list` si odnes: kolik je volných slotů, jaká témata už běží (nová položka je nesmí opakovat) a jak jsou položky staré. Z `check` víš, jestli v tomto běhu smíš mazat.
+Z `list` si odnes: kolik je volných slotů, jaká témata už běží (nová položka je nesmí opakovat) a jak jsou položky staré. `check` musí hlásit obě cesty jako funkční — zakládání i mazání. Když mazání vypadne, rotace se zastaví a skill jen doplňuje do volných slotů.
+
+**Id se mění.** Někdo mohl mezitím zasáhnout do pásku v adminu, takže id z minulého běhu nemusí sedět. Pracuj vždy s tím, co vrátil `list` teď.
 
 ### Krok 2 — Vyber zprávy z vlastních článků (primární zdroj)
 
@@ -193,19 +208,23 @@ Když se nic nezměnilo (všechno duplicita, pásek plný a nemá co ustoupit), 
 
 ---
 
-## Známé omezení — mazání
+## Editace a mazání
 
-`aktuality_webhook.php` umí **jen POST**. `DELETE` a `PUT` existují pouze na `/api/admin/aktuality.php`, kam se servisním klíčem nedostaneš (`401 Neplatná nebo vypršená session`) — ten endpoint chce session z přihlášení jménem a heslem. **Tudy se nechodí**: automatizace nemá držet heslo do adminu.
+Webhook zná `POST`, `PUT` i `DELETE`, všechny pod stejným servisním klíčem. Rotace tedy běží celá sama a nic se nemusí uklízet ručně.
 
-Dokud to platí:
+```bash
+python3 scripts/ticker.py update --id 4 --text "Nové, kratší znění."   # PUT
+python3 scripts/ticker.py update --id 4 --label "SUCHO NA MORAVĚ"      # jen label
+python3 scripts/ticker.py delete --id 5                                # DELETE
+```
 
-- rutina **doplňuje jen do volných slotů**,
-- co má jít pryč, vypíše jako `! smaž ručně v adminu: #3 SKLIZEŇ (prošlá)`,
-- při plném pásku neudělá nic a napíše proč.
+`PUT` je **částečný** — pošle se jen to, co měníš, zbytek zůstane. A hlavně **nemění `created_at`**, takže upravená položka nepřeskočí v pásku dopředu; posune se jen `updated_at`. Když chceš položku vytáhnout na začátek, smaž ji a vlož znovu.
 
-Prakticky to ale pásek neubíjí: týdenní dávka pěti nových položek stejně vytlačí všechno staré, jakmile mazání začne fungovat. Do té doby se z pásku stane archiv a je potřeba ho jednou týdně ručně vysypat.
+Na opravu překlepu nebo zkrácení textu tedy vždycky `update`, ne `delete` + `add`.
 
-Jediné čisté řešení bez hesel je doplnit `DELETE` do webhooku — hotový kód i kontrakt je v [`reference/api-patch.md`](reference/api-patch.md). Po nasazení běží rotace úplně sama; ve skriptu se přepne `mutate()` a `can_mutate()` z `ADMIN_URL` na `WEBHOOK_URL`.
+Kompletní ověřený kontrakt API (včetně toho, co server hlídá a co ne) je v [`reference/aktuality-api.md`](reference/aktuality-api.md).
+
+> **Strop 5 položek server nehlídá** — drží ho jen frontend a tenhle skript. Nikdy neposílej `POST` bez kontroly počtu; `apply` i `add` to dělají za tebe.
 
 ---
 
@@ -230,7 +249,8 @@ Když je potřeba pásek protočit mimo pořadí (mimořádné opatření, velk�
 | `HTTP 401` na webhooku | Špatný nebo odvolaný klíč | Ukonči běh, nahlas — nezkoušej jiný endpoint |
 | `Pole text nesmí překročit 200 znaků` | Dlouhý text prošel do API | Nemělo by nastat, `apply` to chytá dřív — zkrať a opakuj |
 | `Chybí povinná pole: label, text` | Prázdná položka v návrhu | Oprav JSON návrhu |
-| Mazání vrací 401 | Admin endpoint chce session | Doplň jen do volných slotů, zbytek vypiš k ručnímu úklidu |
+| Mazání vrací 405 | Někdo odstranil DELETE větev z webhooku | Doplň jen do volných slotů, zbytek vypiš k ručnímu úklidu |
+| `404 Aktualita nenalezena` | Položku mezitím smazal někdo v adminu | Načti pásek znovu (`list`) a pracuj s aktuálními id |
 | Pásek plný a nic neexpirovalo | 5 čerstvých položek už běží | Nic neposílej, napiš jednou větou že není kam |
 | Výpis článků vrátí 100 záznamů | Chybí `limit=10000` | Zopakuj dotaz s limitem |
 | Rešerše nenajde ověřený fakt | Klidný týden | Pásek nech být — radši 3 pravdivé položky než 5 vycucaných |

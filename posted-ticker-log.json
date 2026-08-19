@@ -1,8 +1,8 @@
 [
   {
     "id": 4,
-    "label": "AGROTECH",
-    "text": "Startup Agdata spouští AGÁTU, umělou inteligenci pro řízení celé farmy. Jeho data dnes využívá třetina profesionálních českých zemědělců na 1,7 milionu hektarů.",
+    "label": "PRVNÍ AI PRO FARMU",
+    "text": "Agdata spouští AGÁTU, umělou inteligenci pro řízení celé farmy — data firmy využívá třetina českých zemědělců.",
     "source": "profifarmar.cz",
     "added_at": "2026-08-19 12:53:26"
   },
@@ -15,9 +15,16 @@
   },
   {
     "id": 6,
-    "label": "PRÁCE",
-    "text": "Českému zemědělství chybí kolem pěti tisíc lidí, nejhůř se shánějí traktoristé a obsluha strojů. Mzdy rostou, na celostátní průměr ale ztrácejí přes deset tisíc korun.",
+    "label": "CHYBÍ LIDÉ",
+    "text": "Zemědělství shání pět tisíc pracovníků, nejhůř se hledají traktoristé.",
     "source": "profifarmar.cz",
     "added_at": "2026-08-19 13:08:13"
+  },
+  {
+    "id": 7,
+    "label": "REKORD",
+    "text": "Řezačka CLAAS Jaguar 1200 zapsala světový rekord: 4 515 tun senáže za dvanáct hodin.",
+    "source": "profifarmar.cz",
+    "added_at": "2026-08-19 15:06:47"
   }
 ]

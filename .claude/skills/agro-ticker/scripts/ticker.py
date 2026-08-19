@@ -7,12 +7,10 @@ a hlavně `apply` — jedním krokem provede celou rotaci: zahodí prošlé, uvo
 místo smazáním nejstarších a doplní nové položky, aby v pásku bylo max 5
 aktuálních zpráv.
 
-Čtení jde přes veřejný endpoint /api/aktuality.php (bez tokenu).
-Zakládání jde přes /api/aktuality_webhook.php (POST, `Authorization: Bearer $AI_API_KEY`).
-Mazání a editace webhook neumí — jedou přes /api/admin/aktuality.php, který dnes
-uznává jen admin session z prohlížeče. Dokud tam servisní klíč neprojde
-(viz reference/api-patch.md), skript jen doplňuje do volných slotů a co je
-potřeba smazat, vypíše k ručnímu úklidu v adminu.
+Čtení jde přes veřejný endpoint /api/aktuality.php (bez tokenu). Zakládání,
+editace i mazání jdou přes /api/aktuality_webhook.php (POST/PUT/DELETE,
+`Authorization: Bearer $AI_API_KEY`). Admin endpoint /api/admin/aktuality.php
+skript nepoužívá — ten chce session z přihlášení jménem a heslem.
 
 Příklady:
     python3 ticker.py list
@@ -40,9 +38,10 @@ from difflib import SequenceMatcher
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
-PUBLIC_URL = "https://profifarmar.cz/api/aktuality.php"      # GET, veřejné
-WEBHOOK_URL = "https://profifarmar.cz/api/aktuality_webhook.php"  # POST, servisní klíč
-ADMIN_URL = "https://profifarmar.cz/api/admin/aktuality.php"  # PUT/DELETE, zatím jen admin session
+PUBLIC_URL = "https://profifarmar.cz/api/aktuality.php"           # GET, veřejné
+WEBHOOK_URL = "https://profifarmar.cz/api/aktuality_webhook.php"  # POST/PUT/DELETE, servisní klíč
+# /api/admin/aktuality.php schválně nepoužíváme — chce session z přihlášení
+# jménem a heslem, a automatizace nemá držet heslo do adminu.
 
 MAX_ITEMS = 5
 LABEL_MAX = 50
@@ -52,6 +51,10 @@ TEXT_MAX = 200
 LABEL_SOFT_MAX = 25    # 2–3 slova
 TEXT_SOFT_MIN = 45
 TEXT_SOFT_MAX = 130    # nad tím zpráva v běžícím pruhu ztrácí úder
+LABEL_STOPWORDS = {
+    "a", "i", "o", "u", "k", "s", "v", "z", "do", "ke", "na", "od", "po",
+    "pro", "se", "ve", "za", "ze",
+}
 
 PRAGUE = ZoneInfo("Europe/Prague")
 TIMEOUT = 30
@@ -172,9 +175,9 @@ def create(label: str, text: str) -> dict:
 
 
 def mutate(method: str, payload: dict) -> bool:
-    """PUT/DELETE přes admin endpoint. Vrací False, když tam servisní klíč neprojde."""
-    status, data = http(method, ADMIN_URL, payload, auth=True)
-    if status == 401:
+    """PUT/DELETE na webhooku. Vrací False, když je endpoint metodu neumí (405/401)."""
+    status, data = http(method, WEBHOOK_URL, payload, auth=True)
+    if status in (401, 405):
         return False
     if status >= 400 or (isinstance(data, dict) and data.get("error")):
         detail = data.get("error") if isinstance(data, dict) else data
@@ -183,9 +186,13 @@ def mutate(method: str, payload: dict) -> bool:
 
 
 def can_mutate() -> bool:
-    """Umí skript i mazat a upravovat? (Admin endpoint zatím chce session z prohlížeče.)"""
-    status, _ = http("GET", ADMIN_URL, auth=True)
-    return status == 200
+    """Umí skript i mazat a upravovat? Zkusí DELETE na id, které neexistuje.
+
+    404 „Aktualita nenalezena“ = metoda je nasazená a klíč prošel, jen záznam není.
+    405/401 = endpoint mazání neumí, nebo klíč neuznal.
+    """
+    status, _ = http("DELETE", WEBHOOK_URL, {"id": 999999}, auth=True)
+    return status == 404
 
 
 # --- validace --------------------------------------------------------------
@@ -219,7 +226,8 @@ def validate(label: str, text: str) -> list[str]:
 
 def warnings(label: str, text: str) -> list[str]:
     out: list[str] = []
-    words = len(label.split())
+    # Předložky a spojky se nepočítají — „PRVNÍ AI PRO FARMU“ jsou tři slova, ne čtyři.
+    words = len([w for w in label.split() if normalize(w) not in LABEL_STOPWORDS])
     if len(label) > LABEL_SOFT_MAX or words > 3:
         out.append(f"label {len(label)} znaků / {words} slova — drž se 2–3 slov do {LABEL_SOFT_MAX} znaků")
     if label != label.upper():
@@ -306,9 +314,9 @@ def cmd_check(args: argparse.Namespace) -> int:
         log(f"zakládání — webhook vrátil neočekávané HTTP {status}: {data}")
 
     if can_mutate():
-        log("mazání i editace fungují — admin endpoint uznává AI_API_KEY.")
+        log("mazání i editace fungují — webhook zná DELETE i PUT.")
         return EXIT_OK
-    log("mazání a editace NEJSOU dostupné — /api/admin/aktuality.php chce admin session.")
+    log("mazání a editace NEJSOU dostupné — webhook zatím DELETE neumí.")
     log("Skript proto jen doplňuje do volných slotů; úklid vypíše k ručnímu smazání v adminu.")
     log("Trvalé řešení: reference/api-patch.md.")
     return EXIT_OK
@@ -331,6 +339,16 @@ def cmd_add(args: argparse.Namespace) -> int:
         log(f"[dry-run] přidal bych: {args.label} — {args.text}")
         return EXIT_OK
     result = create(args.label, args.text)
+    logfile = log_path(args.log)
+    history = load_log(logfile)
+    history.append({
+        "id": result.get("id"),
+        "label": args.label,
+        "text": args.text,
+        "source": args.source,
+        "added_at": now_prague().strftime("%Y-%m-%d %H:%M:%S"),
+    })
+    save_log(logfile, history)
     log(f"přidáno #{result.get('id', '?')}: {args.label} — {args.text}")
     return EXIT_OK
 
@@ -348,10 +366,17 @@ def cmd_update(args: argparse.Namespace) -> int:
         return EXIT_OK
     if not mutate("PUT", {"id": current.get("id"), "label": label, "text": text}):
         die(
-            "editaci zatím nejde udělat programově — /api/admin/aktuality.php chce admin "
-            "session. Uprav položku v adminu, nebo nasaď reference/api-patch.md.",
+            "editaci zatím nejde udělat programově — webhook PUT neumí. "
+            "Uprav položku v adminu, nebo nasaď reference/api-patch.md.",
             EXIT_NO_AUTH,
         )
+    logfile = log_path(args.log)
+    history = load_log(logfile)
+    for entry in history:
+        if str(entry.get("id")) == str(current.get("id")):
+            entry["label"], entry["text"] = label, text
+            save_log(logfile, history)
+            break
     log(f"upraveno #{args.id}: {label} — {text}")
     return EXIT_OK
 
@@ -366,8 +391,8 @@ def cmd_delete(args: argparse.Namespace) -> int:
         return EXIT_OK
     if not mutate("DELETE", {"id": current.get("id")}):
         die(
-            "mazání zatím nejde udělat programově — /api/admin/aktuality.php chce admin "
-            f"session. Smaž #{args.id} „{current.get('label')}“ v adminu, nebo nasaď "
+            "mazání zatím nejde udělat programově — webhook DELETE neumí. "
+            f"Smaž #{args.id} „{current.get('label')}“ v adminu, nebo nasaď "
             "reference/api-patch.md.",
             EXIT_NO_AUTH,
         )
@@ -465,7 +490,7 @@ def cmd_apply(args: argparse.Namespace) -> int:
     deletable = can_mutate() if to_delete else True
     if to_delete and not deletable:
         free = MAX_ITEMS - len(current)
-        log("mazání programově nejde — /api/admin/aktuality.php chce admin session.")
+        log("mazání programově nejde — webhook DELETE neumí.")
         log(f"Doplním proto jen do volných slotů (volno: {max(free, 0)}).")
         for item in to_delete:
             why = "prošlá" if item in expired else "nejstarší"
@@ -524,6 +549,8 @@ def main() -> int:
     p = sub.add_parser("add", help="přidá jednu položku")
     p.add_argument("--label", required=True)
     p.add_argument("--text", required=True)
+    p.add_argument("--source", default="", help="odkud zpráva je (doména nebo profifarmar.cz)")
+    p.add_argument("--log", help="cesta k posted-ticker-log.json")
     p.add_argument("--dry-run", action="store_true")
     p.set_defaults(func=cmd_add)
 
@@ -531,6 +558,7 @@ def main() -> int:
     p.add_argument("--id", required=True)
     p.add_argument("--label")
     p.add_argument("--text")
+    p.add_argument("--log", help="cesta k posted-ticker-log.json")
     p.add_argument("--dry-run", action="store_true")
     p.set_defaults(func=cmd_update)
 
