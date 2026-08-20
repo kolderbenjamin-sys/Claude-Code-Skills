@@ -184,17 +184,21 @@ Stejný postup jako v `agro-cover-image` (Krok 3) — REST upload přes
 `mcp__Windows-MCP__PowerShell`, endpoint `image/upload`:
 
 ```
-cloudName = "dxrpsbvx2"
-apiKey    = "963366693952873"
-apiSecret = "As2Z8GqSVWA3RIQG-aeylsSWipk"
+cloudName = <User env proměnná CLOUDINARY_CLOUD_NAME>
+apiKey    = <User env proměnná CLOUDINARY_API_KEY>
+apiSecret = <User env proměnná CLOUDINARY_API_SECRET>
 folder    = "ČLÁNKY"
 ```
 
 ```powershell
 $filePath = "[IMG_PATH]"
-$cloudName = "dxrpsbvx2"
-$apiKey = "963366693952873"
-$apiSecret = "As2Z8GqSVWA3RIQG-aeylsSWipk"
+$cloudName = [System.Environment]::GetEnvironmentVariable('CLOUDINARY_CLOUD_NAME', 'User')
+$apiKey    = [System.Environment]::GetEnvironmentVariable('CLOUDINARY_API_KEY', 'User')
+$apiSecret = [System.Environment]::GetEnvironmentVariable('CLOUDINARY_API_SECRET', 'User')
+if (-not $cloudName -or -not $apiKey -or -not $apiSecret) {
+    Write-Output "[COVER-GEMINI] CHYBA — Cloudinary env proměnné chybí (CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET)."
+    exit 1
+}
 $folder = "ČLÁNKY"
 
 $epoch = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
@@ -315,7 +319,8 @@ Zobraz shrnutí v češtině:
 | Stav | Příčina | Řešení |
 |---|---|---|
 | Žádný článek bez cover image | Všechny články mají obrázek | Informuj uživatele, ukonči gracefully |
-| AI_API_KEY chybí | Proměnná není nastavena | Požádej uživatele o nastavení tokenu |
+| AI_API_KEY chybí | Proměnná není nastavena | Ulož ji do User env proměnných — viz `SECRETS.md` |
+| Cloudinary env proměnné chybí | `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` nejsou nastavené | Ulož je do User env proměnných — viz `SECRETS.md` |
 | Gemini odmítne / nevygeneruje | Politika obsahu, nejasný prompt | Zobecni prompt, zkus znovu (max 2×) |
 | Vygenerovaný obrázek neodpovídá tématu | Nejasný/abstraktní prompt | Konkretizuj scénu, zkus znovu (max 1×) |
 | Stažení obrázku selže (fetch/base64) | CORS, neplatná URL | Zkus `data:` variantu z `src`, nebo screenshot+crop jako záložní řešení |

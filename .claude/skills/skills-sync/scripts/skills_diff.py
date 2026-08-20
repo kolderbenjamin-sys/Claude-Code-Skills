@@ -192,6 +192,12 @@ def find_repo(explicit: str | None, slug: str) -> Path | None:
 # --------------------------------------------------------------------------- #
 # porovnání obsahu
 # --------------------------------------------------------------------------- #
+# Textové přípony, u kterých se konce řádků normalizují před porovnáním.
+# Lokální kopie ze sync z claude.ai chodí s CRLF, v repu je LF — bez normalizace
+# by se každý takový soubor hlásil jako změněný, i když je obsah totožný.
+TEXT_SUFFIXES = {".md", ".py", ".mjs", ".js", ".json", ".txt", ".sh", ".yml", ".yaml", ".html", ".css"}
+
+
 def hash_tree(root: Path) -> dict[str, str]:
     """relativní cesta -> sha256, rekurzivně, s vynecháním balastu."""
     result: dict[str, str] = {}
@@ -204,9 +210,12 @@ def hash_tree(root: Path) -> dict[str, str]:
             if full.is_symlink() or not full.is_file():
                 continue
             digest = hashlib.sha256()
-            with full.open("rb") as fh:
-                for chunk in iter(lambda: fh.read(65536), b""):
-                    digest.update(chunk)
+            if full.suffix.lower() in TEXT_SUFFIXES:
+                digest.update(full.read_bytes().replace(b"\r\n", b"\n"))
+            else:
+                with full.open("rb") as fh:
+                    for chunk in iter(lambda: fh.read(65536), b""):
+                        digest.update(chunk)
             result[str(full.relative_to(root))] = digest.hexdigest()
     return result
 

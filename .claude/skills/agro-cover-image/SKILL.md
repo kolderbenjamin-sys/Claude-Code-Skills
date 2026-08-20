@@ -50,9 +50,9 @@ Cloudinary MCP nepodporuje lokální `file://` cesty — upload probíhá přes 
 
 **Konstanty:**
 ```
-cloudName  = "dxrpsbvx2"
-apiKey     = "963366693952873"
-apiSecret  = "As2Z8GqSVWA3RIQG-aeylsSWipk"
+cloudName  = <User env proměnná CLOUDINARY_CLOUD_NAME>
+apiKey     = <User env proměnná CLOUDINARY_API_KEY>
+apiSecret  = <User env proměnná CLOUDINARY_API_SECRET>
 folder     = "ČLÁNKY"
 ```
 
@@ -60,9 +60,13 @@ folder     = "ČLÁNKY"
 
 ```powershell
 $filePath = "[IMG_PATH]"
-$cloudName = "dxrpsbvx2"
-$apiKey = "963366693952873"
-$apiSecret = "As2Z8GqSVWA3RIQG-aeylsSWipk"
+$cloudName = [System.Environment]::GetEnvironmentVariable('CLOUDINARY_CLOUD_NAME', 'User')
+$apiKey    = [System.Environment]::GetEnvironmentVariable('CLOUDINARY_API_KEY', 'User')
+$apiSecret = [System.Environment]::GetEnvironmentVariable('CLOUDINARY_API_SECRET', 'User')
+if (-not $cloudName -or -not $apiKey -or -not $apiSecret) {
+    Write-Output "[COVER] CHYBA — Cloudinary env proměnné chybí (CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET)."
+    exit 1
+}
 $folder = "ČLÁNKY"
 
 $epoch = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
@@ -240,6 +244,7 @@ Zobraz v češtině:
 |---|---|---|
 | Žádný obrázek ve složce | Uživatel ho ještě nevytvořil | Ukonči s hláškou, požádej o nahrání obrázku |
 | Cloudinary upload selže | Špatné credentials nebo síťová chyba | Zaznamenej chybu, ukonči |
-| AI_API_KEY chybí | Proměnná není nastavena | Požádej uživatele o nastavení tokenu |
+| AI_API_KEY chybí | Proměnná není nastavena | Ulož ji do User env proměnných — viz `SECRETS.md` |
+| Cloudinary env proměnné chybí | `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` nejsou nastavené | Ulož je do User env proměnných — viz `SECRETS.md` |
 | Žádný článek bez cover image | Všechny články mají obrázek | Informuj uživatele, ukonči gracefully |
 | PUT selže | Chybné ID nebo server error | Zaznamenej chybu, zkus znovu jednou |
