@@ -57,9 +57,9 @@ Cloudinary MCP nepodporuje lokální `file://` cesty — upload probíhá přes 
 
 **Konstanty:**
 ```
-cloudName  = "dxrpsbvx2"
-apiKey     = "963366693952873"
-apiSecret  = "As2Z8GqSVWA3RIQG-aeylsSWipk"
+cloudName  = <User env proměnná CLOUDINARY_CLOUD_NAME>
+apiKey     = <User env proměnná CLOUDINARY_API_KEY>
+apiSecret  = <User env proměnná CLOUDINARY_API_SECRET>
 folder     = "agro-restoration"
 publicId   = "restoration_[DATUM]_[ID]"
 ```
@@ -67,9 +67,13 @@ publicId   = "restoration_[DATUM]_[ID]"
 **PowerShell příkaz** (spusť přes `mcp__Windows-MCP__PowerShell`):
 ```powershell
 $filePath = "[MP4_PATH]"
-$cloudName = "dxrpsbvx2"
-$apiKey = "963366693952873"
-$apiSecret = "As2Z8GqSVWA3RIQG-aeylsSWipk"
+$cloudName = [System.Environment]::GetEnvironmentVariable('CLOUDINARY_CLOUD_NAME', 'User')
+$apiKey    = [System.Environment]::GetEnvironmentVariable('CLOUDINARY_API_KEY', 'User')
+$apiSecret = [System.Environment]::GetEnvironmentVariable('CLOUDINARY_API_SECRET', 'User')
+if (-not $cloudName -or -not $apiKey -or -not $apiSecret) {
+    Write-Output "[PUBLISH] CHYBA — Cloudinary env proměnné chybí (CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET)."
+    exit 1
+}
 $folder = "agro-restoration"
 $publicId = "restoration_[DATUM]_[ID]"
 
@@ -215,20 +219,17 @@ Parametry `create_post`:
 **Konstanty:**
 ```
 Buffer MCP endpoint = "https://mcp.buffer.com/mcp"
-Buffer token = načti z claude_desktop_config.json → mcpServers.buffer.args (Bearer token)
+Buffer token        = <User env proměnná BUFFER_API_KEY>
 ```
 
-**Načtení tokenu (PowerShell):**
+**Načtení tokenu (PowerShell):** token čti z User env proměnné, **ne** z konfiguračních
+souborů. Kam ji uložit, popisuje [`SECRETS.md`](https://github.com/kolderbenjamin-sys/Claude-Code-Skills/blob/main/SECRETS.md).
+
 ```powershell
-$config = Get-Content "$env:APPDATA\Claude\claude_desktop_config.json" -Raw | ConvertFrom-Json
-$token = ($config.mcpServers.buffer.args | Where-Object { $_ -match "^Bearer " }) -replace "^Bearer ", ""
-# Pokud token není v args s "Bearer" prefixem, hledej řetězec po "--header" a "Authorization:"
+$token = [System.Environment]::GetEnvironmentVariable('BUFFER_API_KEY', 'User')
 if (-not $token) {
-    $headerIdx = [array]::IndexOf($config.mcpServers.buffer.args, "--header")
-    if ($headerIdx -ge 0) {
-        $authHeader = $config.mcpServers.buffer.args[$headerIdx + 1]
-        $token = $authHeader -replace "Authorization: Bearer ", ""
-    }
+    Write-Output "[PUBLISH] CHYBA — BUFFER_API_KEY není nastavena. Viz SECRETS.md."
+    exit 1
 }
 ```
 
@@ -410,4 +411,6 @@ Pokud smazání selže (zamčený soubor apod.), reportuj které soubory se nepo
 | Buffer MCP tool nedostupný | Automaticky přepni na Metodu B (PowerShell HTTP) — viz Krok 3 |
 | Buffer 406 Not Acceptable | Přidej header `Accept: text/event-stream, application/json` |
 | Facebook post selže bez typu | Přidej `metadata.facebook.type: "reel"` — FB vyžaduje explicitní typ |
-| Buffer token expiroval | Načti nový z `claude_desktop_config.json` nebo navštiv publish.buffer.com/settings/api |
+| Buffer token expiroval | Vygeneruj nový na publish.buffer.com/settings/api a přeulož do `BUFFER_API_KEY` (User scope) |
+| Cloudinary env proměnné chybí | Ulož `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` do User env proměnných — viz `SECRETS.md` |
+| BUFFER_API_KEY chybí | Ulož ji do User env proměnných — viz `SECRETS.md` |

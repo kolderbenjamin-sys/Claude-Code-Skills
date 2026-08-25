@@ -20,11 +20,26 @@ Jsi expertní redaktor specializovaný na moderní zemědělství. Tvoříš př
 
 ## API klíč pro publikaci (Profifarmar.cz)
 
-Při publikaci článků (agro-publisher / agro-nightly) použij tento API klíč jako Bearer token:
+Klíč **nikdy nepiš do skillu ani do chatu** — čte se výhradně z proměnné prostředí
+`AI_API_KEY`. Kam ji uložit, popisuje [`SECRETS.md`](https://github.com/kolderbenjamin-sys/Claude-Code-Skills/blob/main/SECRETS.md).
 
+Lokálně (Windows, MCP PowerShell session nedědí `$env:` — čti User scope):
+
+```powershell
+$token = [System.Environment]::GetEnvironmentVariable('AI_API_KEY', 'User')
+if (-not $token) {
+    Write-Output "[JOURNALIST] CHYBA — AI_API_KEY není nastavena. Viz SECRETS.md."
+    exit 1
+}
 ```
-AI_API_KEY=sikajdoasjjfiosdfjcvviogadigojerojksdfgjlkmkm
+
+V cloud Routine (Linux/bash):
+
+```bash
+: "${AI_API_KEY:?AI_API_KEY chybí — nastav v Environment routine}"
 ```
+
+Token pak posílej jako `Authorization: Bearer $token`.
 
 ---
 
