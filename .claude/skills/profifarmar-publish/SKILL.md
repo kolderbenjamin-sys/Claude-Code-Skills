@@ -412,5 +412,5 @@ Pokud smazání selže (zamčený soubor apod.), reportuj které soubory se nepo
 | Buffer 406 Not Acceptable | Přidej header `Accept: text/event-stream, application/json` |
 | Facebook post selže bez typu | Přidej `metadata.facebook.type: "reel"` — FB vyžaduje explicitní typ |
 | Buffer token expiroval | Vygeneruj nový na publish.buffer.com/settings/api a přeulož do `BUFFER_API_KEY` (User scope) |
-| Cloudinary env proměnné chybí | `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` nejsou nastavené | Ulož je do User env proměnných — viz `SECRETS.md` |
-| BUFFER_API_KEY chybí | Proměnná není nastavena | Ulož ji do User env proměnných — viz `SECRETS.md` |
+| Cloudinary env proměnné chybí | Ulož `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` do User env proměnných — viz `SECRETS.md` |
+| BUFFER_API_KEY chybí | Ulož ji do User env proměnných — viz `SECRETS.md` |
