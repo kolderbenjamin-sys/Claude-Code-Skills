@@ -1,0 +1,44 @@
+[
+  {
+    "id": 2,
+    "label": "ÚLEVY NA DOTACÍCH",
+    "text": "Ministerstvo kvůli suchu zmírnilo podmínky dotací pro nejhůř zasažené oblasti.",
+    "source": "profifarmar.cz",
+    "added_at": "2026-08-15 11:59:59"
+  },
+  {
+    "id": 3,
+    "label": "VÝNOSY DRŽÍ",
+    "text": "Sklizeň obilovin a řepky běží naplno, výnosy se navzdory suchu drží blízko loňského průměru.",
+    "source": "profifarmar.cz",
+    "added_at": "2026-08-15 12:00:28"
+  },
+  {
+    "id": 4,
+    "label": "PRVNÍ AI PRO FARMU",
+    "text": "Agdata spouští AGÁTU, umělou inteligenci pro řízení celé farmy — data firmy využívá třetina českých zemědělců.",
+    "source": "profifarmar.cz",
+    "added_at": "2026-08-19 12:53:26"
+  },
+  {
+    "id": 5,
+    "label": "TECHNIKA",
+    "text": "Nová řada řezaček CLAAS Jaguar 1000 zvládne až 500 tun řezanky za hodinu. Model Jaguar 1200 se zapsal do Guinnessovy knihy se 4 515 tunami senáže za dvanáct hodin.",
+    "source": "profifarmar.cz",
+    "added_at": "2026-08-19 13:08:13"
+  },
+  {
+    "id": 6,
+    "label": "CHYBÍ LIDÉ",
+    "text": "Zemědělství shání pět tisíc pracovníků, nejhůř se hledají traktoristé.",
+    "source": "profifarmar.cz",
+    "added_at": "2026-08-19 13:08:13"
+  },
+  {
+    "id": 7,
+    "label": "REKORD",
+    "text": "Řezačka CLAAS Jaguar 1200 zapsala světový rekord: 4 515 tun senáže za dvanáct hodin.",
+    "source": "profifarmar.cz",
+    "added_at": "2026-08-19 15:06:47"
+  }
+]

@@ -10,7 +10,7 @@ description: >
   Pokud se uživatel zmíní o psaní, rešerši nebo tvorbě zemědělských zpravodajských
   textů — vždy aktivuj tento skill.
 metadata:
-  version: "0.4.0"
+  version: "0.4.1"
   author: "Benjamin Kolder"
 ---
 
@@ -20,11 +20,23 @@ Jsi expertní redaktor specializovaný na moderní zemědělství. Tvoříš př
 
 ## API klíč pro publikaci (Profifarmar.cz)
 
-Při publikaci článků (agro-publisher / agro-nightly) použij tento API klíč jako Bearer token:
+Klíč **nikdy nepiš do skillu ani do chatu** — token se mění a natvrdo vepsaná hodnota
+časem zestárne a povede k `401 Unauthorized` (stalo se 25. 08. 2026). Čte se výhradně
+z proměnné prostředí `AI_API_KEY`. Kam ji uložit, popisuje
+[`SECRETS.md`](https://github.com/kolderbenjamin-sys/Claude-Code-Skills/blob/main/SECRETS.md).
 
+Lokálně (Windows, MCP PowerShell session nedědí `$env:` — čti User scope):
+
+```powershell
+$apiKey = [System.Environment]::GetEnvironmentVariable("AI_API_KEY", "User")
+if (-not $apiKey) {
+    Write-Output "[JOURNALIST] CHYBA — AI_API_KEY není nastavena. Viz SECRETS.md."
+    exit 1
+}
 ```
-AI_API_KEY=sikajdoasjjfiosdfjcvviogadigojerojksdfgjlkmkm
-```
+
+Použij `$apiKey` jako Bearer token pro všechny GET/POST/PUT požadavky na
+`https://profifarmar.cz/api/webhook.php`.
 
 ---
 
@@ -49,6 +61,15 @@ Ze záložky „Zdroje" získej seznam URL zdrojů:
 
 Pokud `google_drive_fetch` selže → pokračuj bez přerušení na Krok 2 a použij výše uvedené zdroje.
 
+**Pozor — dokument obsahuje i staré náměty z předchozích běhů (RUN #1, #2, ...), ne
+jen seznam zdrojových webů.** Tyto náměty rychle zastarají — 25. 08. 2026 bylo všech
+12 námětů v dokumentu už dávno publikováno (poslední pocházely z konce března 2026).
+Použij tento dokument **jen jako seznam zdrojových URL webů** pro rešerši (tabulka
+domén výše), ne jako hotovou zásobu témat k přímému publikování. Konkrétní témata
+vždy over čerstvě přes WebSearch/WebFetch nad těmito zdroji (Krok 2–3) a rovnou je
+porovnej s Krokem 1b — pokud je námět z dokumentu starší než pár týdnů, prakticky
+jistě už je publikovaný a je to jen ztracený čas ho zkoušet.
+
 ---
 
 ### Krok 1b – Kontrola duplicit přes Profifarmar API
@@ -70,7 +91,6 @@ Použij Windows-MCP PowerShell:
 
 ```powershell
 $apiKey = [System.Environment]::GetEnvironmentVariable("AI_API_KEY", "User")
-# Bez ?limit vrací API tiše jen 100 záznamů, a ne spolehlivě těch nejnovějších — vždy dotahuj vše.
 $req = [System.Net.HttpWebRequest]::Create("https://profifarmar.cz/api/webhook.php?limit=10000")
 $req.Method = "GET"
 $req.Headers.Add("Authorization", "Bearer $apiKey")

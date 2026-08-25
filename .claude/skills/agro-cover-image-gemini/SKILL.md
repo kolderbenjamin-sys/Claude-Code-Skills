@@ -35,7 +35,7 @@ MCP PowerShell session nezdědí proměnné prostředí — token je uložen na 
 ```powershell
 $token = [System.Environment]::GetEnvironmentVariable('AI_API_KEY', 'User')
 if (-not $token) {
-    Write-Output "[COVER-GEMINI] CHYBA — AI_API_KEY není nastavena."
+    Write-Output "[COVER-GEMINI] CHYBA — AI_API_KEY není nastavena. Viz SECRETS.md."
     exit 1
 }
 ```
@@ -44,7 +44,6 @@ if (-not $token) {
 
 ```powershell
 $token = [System.Environment]::GetEnvironmentVariable('AI_API_KEY', 'User')
-# Bez ?limit vrací API tiše jen 100 záznamů, a ne spolehlivě těch nejnovějších — vždy dotahuj vše.
 $response = Invoke-WebRequest -Uri "https://profifarmar.cz/api/webhook.php?limit=10000" -Method GET `
   -Headers @{ "Authorization" = "Bearer $token" } -UseBasicParsing
 Write-Output $response.Content
@@ -75,13 +74,21 @@ shrnutí článku, ale něco, co se dá nakreslit. Např.:
 - článek o nové secí technice → "moderní secí stroj v akci na poli za soumraku"
 - článek o mléčné produkci → "moderní dojírna, klidné dojnice, ranní světlo"
 
+**Nikdy nezahrnuj do scény konkrétní lidskou postavu** (např. "farmer looking concerned",
+"zemědělec kontroluje tablet") — 25. 08. 2026 takový prompt (dojírna + zemědělec) v Gemini
+opakovaně zamrzl na prázdném/nedokončeném obrázku, zatímco identická scéna bez lidí
+("no people") proběhla hned napoprvé. Lidé v generovaných fotkách navíc mívají
+zdeformované ruce/obličeje. Vždy piš scénu jako prázdnou krajinu, techniku, zvířata nebo
+interiér — a explicitně přidej "no people" do promptu, i když článek o lidech pojednává
+(např. o cenách, dotacích, farmářích).
+
 Napiš prompt v **angličtině** (Gemini na anglické prompty reaguje konzistentněji) ve
 stylu profesionální zemědělské fotografie. Doporučená kostra promptu:
 
 ```
-A photorealistic photograph of [konkrétní scéna podle tématu článku], professional
+A photorealistic photograph of [konkrétní scéna podle tématu článku, bez lidí], professional
 agricultural/editorial photography, natural lighting, high detail, wide shot,
-16:9 aspect ratio, no text or watermarks
+16:9 aspect ratio, no people, no text or watermarks
 ```
 
 Dodatek "no text or watermarks" je důležitý — Gemini má sklon do generovaných obrázků
@@ -261,20 +268,22 @@ Cloudinary free plan má limit 10 485 760 bytes. JPG quality 85 z Gemini PNG je 
 ## Krok 6 — Nahraj na Cloudinary
 
 Stejný postup jako v `agro-cover-image` (Krok 3) — REST upload přes
-`mcp__Windows-MCP__PowerShell`, endpoint `image/upload`:
+`mcp__Windows-MCP__PowerShell`, endpoint `image/upload`.
 
-```
-cloudName = "dxrpsbvx2"
-apiKey    = "963366693952873"
-apiSecret = "As2Z8GqSVWA3RIQG-aeylsSWipk"
-folder    = "ČLÁNKY"
-```
+Klíč **nikdy nepiš do skillu ani do chatu** — stalo se 25. 08. 2026, že natvrdo
+vepsaný `apiKey` v čase zestárl a vrátil `"Invalid api_key"`. Čte se výhradně
+z proměnných prostředí. Kam je uložit, popisuje
+[`SECRETS.md`](https://github.com/kolderbenjamin-sys/Claude-Code-Skills/blob/main/SECRETS.md).
 
 ```powershell
 $filePath = "[IMG_PATH]"
-$cloudName = "dxrpsbvx2"
-$apiKey = "963366693952873"
-$apiSecret = "As2Z8GqSVWA3RIQG-aeylsSWipk"
+$cloudName = [System.Environment]::GetEnvironmentVariable('CLOUDINARY_CLOUD_NAME', 'User')
+$apiKey    = [System.Environment]::GetEnvironmentVariable('CLOUDINARY_API_KEY', 'User')
+$apiSecret = [System.Environment]::GetEnvironmentVariable('CLOUDINARY_API_SECRET', 'User')
+if (-not $cloudName -or -not $apiKey -or -not $apiSecret) {
+    Write-Output "[COVER-GEMINI] CHYBA — Cloudinary env proměnné chybí (CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET). Viz SECRETS.md."
+    exit 1
+}
 $folder = "ČLÁNKY"
 
 $epoch = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
@@ -486,8 +495,10 @@ Smaž lokální soubory paralelně. Souhrn:
 | Stav | Příčina | Řešení |
 |---|---|---|
 | Žádný článek bez cover image | Všechny články mají obrázek, nebo agro-journalist nezavolal POST do API | Spusť `agro-journalist` (Krok 5.5) a ověř články přes GET; ukonči gracefully |
-| AI_API_KEY chybí | Proměnná není nastavena | Požádej uživatele o nastavení tokenu |
+| AI_API_KEY chybí | Proměnná není nastavena | Ulož ji do User env proměnných — viz `SECRETS.md` |
+| Cloudinary env proměnné chybí | `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` nejsou nastavené | Ulož je do User env proměnných — viz `SECRETS.md` |
 | Gemini odmítne / nevygeneruje | Politika obsahu, nejasný prompt | Zobecni prompt, zkus znovu (max 2×) |
+| Generování zamrzne na prázdném/šedém obrázku | Prompt obsahuje konkrétní lidskou postavu | Přepiš scénu bez lidí (technika/zvířata/krajina/interiér), přidej "no people", zkus v novém tabu |
 | Vygenerovaný obrázek neodpovídá tématu | Nejasný/abstraktní prompt | Konkretizuj scénu, zkus znovu (max 1×) |
 | Klik na download neudělal nic | Synthetic JS click — Chrome blokuje | **Použij `computer.hover` → `computer.left_click([1284, 343])`** (CDP trusted event) |
 | Download stáhl prázdný / starý obrázek | Recyklovaná konverzace | Otevři **nový tab** přes `tabs_create_mcp` + `navigate` a Krok 3 zopakuj |

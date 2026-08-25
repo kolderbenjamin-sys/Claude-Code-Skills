@@ -111,9 +111,9 @@ Cloudinary MCP nepodporuje lokální `file://` cesty — upload probíhá přes 
 **Konstanty:**
 
 ```
-cloudName  = "dxrpsbvx2"
-apiKey     = "963366693952873"
-apiSecret  = "As2Z8GqSVWA3RIQG-aeylsSWipk"
+cloudName  = <User env proměnná CLOUDINARY_CLOUD_NAME>
+apiKey     = <User env proměnná CLOUDINARY_API_KEY>
+apiSecret  = <User env proměnná CLOUDINARY_API_SECRET>
 folder     = "ČLÁNKY"
 ```
 
@@ -121,9 +121,13 @@ folder     = "ČLÁNKY"
 
 ```powershell
 $filePath = "[IMG_PATH]"
-$cloudName = "dxrpsbvx2"
-$apiKey = "963366693952873"
-$apiSecret = "As2Z8GqSVWA3RIQG-aeylsSWipk"
+$cloudName = [System.Environment]::GetEnvironmentVariable('CLOUDINARY_CLOUD_NAME', 'User')
+$apiKey    = [System.Environment]::GetEnvironmentVariable('CLOUDINARY_API_KEY', 'User')
+$apiSecret = [System.Environment]::GetEnvironmentVariable('CLOUDINARY_API_SECRET', 'User')
+if (-not $cloudName -or -not $apiKey -or -not $apiSecret) {
+    Write-Output "[COVER] CHYBA — Cloudinary env proměnné chybí (CLOUDINARY_CLOUD_NAME / CLOUDINARY_API_KEY / CLOUDINARY_API_SECRET)."
+    exit 1
+}
 $folder = "ČLÁNKY"
 
 $epoch = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
@@ -358,7 +362,8 @@ Doporučené pořadí pro maximální efektivitu:
 | Žádný obrázek ve složce | Uživatel ho ještě nevytvořil | Ukonči s hláškou, požádej o nahrání obrázku |
 | Obrázek >10 MB | Příliš velký pro Cloudinary | Automatická komprese do JPEG quality 85 (pak 70) |
 | Cloudinary upload selže | Špatné credentials nebo síťová chyba | Zaznamenej chybu, pokračuj s ostatními páry |
-| AI_API_KEY chybí | Proměnná není nastavena | Požádej uživatele o nastavení tokenu |
+| AI_API_KEY chybí | Proměnná není nastavena | Ulož ji do User env proměnných — viz `SECRETS.md` |
+| Cloudinary env proměnné chybí | `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` nejsou nastavené | Ulož je do User env proměnných — viz `SECRETS.md` |
 | Žádný článek bez cover image | Všechny články mají obrázek | Informuj uživatele, ukonči gracefully |
 | Více obrázků než článků | Přebytek obrázků | Ignoruj přebytek, zpracuj jen tolik kolik je článků |
 | Více článků než obrázků | Nedostatek obrázků | Zpracuj co je k dispozici, zbylé články vypiš v shrnutí |
