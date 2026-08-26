@@ -545,6 +545,47 @@ Když se nepodařilo naplnit všechny tři sloty, uveď to hned na prvním řád
 
 ---
 
+## Krok 9 — Upozornění: ozvi se jen při chybě
+
+Shrnutí z Kroku 8 skončí v transcriptu session, na který se v 6:20 ráno nikdo nedívá. Na telefon
+a do mailu dorazí **jen to, co pošleš přes `PushNotification`**. Proto platí jednoduché pravidlo:
+
+> **Úspěšný běh se nehlásí.** Když vyšly všechny tři story, log se uložil do `main` a nic se
+> nemuselo obcházet, **žádnou notifikaci neposílej**. Denní „všechno v pořádku" jen otupí
+> pozornost na tu jednu zprávu, která bude jednou opravdu důležitá.
+
+**Notifikaci pošli, když nastane cokoli z tohohle:**
+
+| Situace | Proč to nesnese odklad |
+|---|---|
+| Běh vůbec nedojel — klon selhal, chybí env proměnná, spadl renderer nebo Cloudinary | Dneska nevyjde žádná story |
+| `create_post` selhal a story se vynechala | Na profilu bude díra, článek se musí postnout ručně |
+| Push logu **neprošel do `main`** (i když se uložil do `claude/stories-state`) | Zítřejší běh vybere stejné články a nikdo si toho nevšimne |
+| Naplnily se **míň než 3 sloty** | Dávka nebyla kompletní |
+| Story šla ven přes **`shareNow`** | Vyšla mimo plánovanou hodinu, rozložení přes den se rozbilo |
+
+Sporné případy ber jako chybu a ozvi se. Lepší jedna notifikace navíc u něčeho, co vypadá divně,
+než ticho u běhu, který potichu neudělal nic.
+
+> Doplnění staršího článku kvůli sezónnosti **není chyba** — patří do shrnutí (Krok 8),
+> ne do notifikace. Notifikace je od toho, že je potřeba zasáhnout.
+
+**Tvar zprávy.** Text zabal do `<routine_summary>`; první věta se ukáže jako banner na telefonu,
+celý text dojde mailem. Do první věty patří **co je rozbité**, ne „agro-stories doběhly":
+
+```
+<routine_summary>
+Story na 12:00 se nenaplánovala — Buffer odmítl obrázek (400 Invalid image URL).
+Zbylé dvě (07:00 a 18:00) jsou naplánované na IG i FB. Log uložen do main, vynechaný
+článek v něm NENÍ, takže ho zítřejší běh zkusí znovu.
+Cloudinary URL vynechané story: https://res.cloudinary.com/.../story_2026-08_xyz.png
+</routine_summary>
+```
+
+Ať se rovnou z banneru pozná, jestli je potřeba sáhnout hned (postnout ručně), nebo to počká.
+
+---
+
 ## Nastavení Routine
 
 - **Cron:** `0 4 * * *` UTC → 06:00 Prague v létě, 05:00 v zimě. Po ranních článcích a bezpečně
