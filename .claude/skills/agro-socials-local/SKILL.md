@@ -59,9 +59,14 @@ Instagram a Facebook přes Buffer. Vše v češtině.
 ## Krok 1 — Načti článek z Profifarmar API
 
 ```
-API URL    = https://profifarmar.cz/api/webhook.php
+API URL    = https://profifarmar.cz/api/webhook.php?limit=10000
 Autentizace = Bearer token z env proměnné AI_API_KEY (User scope)
 ```
+
+> ⚠️ **KRITICKÉ:** bez parametru `?limit=` endpoint vrací jen 100 záznamů řazených podle `id`
+> (UUID) — NE podle `published_at`! Protože UUID jsou prakticky náhodná, nejnovější článek tak
+> může tiše chybět i v `Select-Object -First 1` výběru, i když existuje. VŽDY volej s vysokým
+> limitem (`?limit=10000`) a řaď si výsledek podle `published_at` sám (viz `agro-socials-cloud`).
 
 ```powershell
 $ProgressPreference = 'SilentlyContinue'
@@ -72,7 +77,6 @@ if (-not $token) {
     exit 1
 }
 
-# Bez ?limit vrací API tiše jen 100 záznamů, a ne spolehlivě těch nejnovějších — vždy dotahuj vše.
 $response = Invoke-WebRequest -Uri "https://profifarmar.cz/api/webhook.php?limit=10000" -Method GET `
   -Headers @{ "Authorization" = "Bearer $token" } -UseBasicParsing
 $json = $response.Content | ConvertFrom-Json

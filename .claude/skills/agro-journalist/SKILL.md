@@ -147,9 +147,32 @@ Pro každé ze 3 témat:
 Napiš 3 články. Každý musí mít **přesně tuto strukturu** (viz vzor níže):
 
 1. **Nadpis** — v kurzívě (`*Nadpis*`), výsledek nebo událost, ne otázka
-2. **Perex** — 1–2 věty shrnující článek. Plynulý text, ne bullet body. BEZ HTML tagů. Toto se na webu zobrazuje jako samostatný blok pod nadpisem — nesmí se opakovat v těle.
-3. **Tělo článku** — **200–400 slov**, 3–4 odstavce s podnadpisy, přítomný nebo minulý čas
-4. **Zdroje** — klikatelné HTML odkazy, ne surové URL
+2. **Perex** — 1–2 věty shrnující článek. Plynulý text v souvislých větách, žádné odrážky. BEZ HTML tagů. Toto se na webu zobrazuje jako samostatný blok pod nadpisem — nesmí se opakovat v těle.
+3. **META_TITLE** — SEO titulek pro výsledky vyhledávání, **max 60 znaků** (viz níže)
+4. **META_DESCRIPTION** — SEO popisek pro výsledky vyhledávání, **150–160 znaků** (viz níže)
+5. **Tělo článku** — **200–400 slov**, 3–4 odstavce s podnadpisy, přítomný nebo minulý čas
+6. **Zdroje** — klikatelné HTML odkazy, ne surové URL
+
+**Meta tagy pro SEO (`META_TITLE`, `META_DESCRIPTION`):**
+
+Tahle dvě pole se v DB ukládají do sloupců `meta_title` a `meta_description` a jdou do
+`<head>` stránky — je to text, který člověk uvidí ve výsledcích Googlu. Nejsou to kopie
+`title` a `perex`.
+
+| Pole | Délka | Co to je |
+|---|---|---|
+| `META_TITLE` | **max 60 znaků** | Výstižná verze titulku zaměřená na klíčové slovo. Titulek článku bývá delší a publicističtější; sem patří to, co lidé opravdu hledají, pokud možno na začátku. Když se `title` do 60 znaků vejde a je dost konkrétní, může zůstat beze změny. |
+| `META_DESCRIPTION` | **150–160 znaků** | Láká ke kliknutí — obsahuje konkrétní číslo, fakt nebo přínos z článku. Není to opsaný perex a **nesmí slibovat víc, než co v článku je**. Žádný clickbait. |
+
+**Obě pole musí být unikátní napříč celým webem.** Dva články nesmějí mít stejný ani skoro
+stejný `META_TITLE` — jinak si v hledání kradou pozice navzájem (keyword cannibalization).
+Když v jedné dávce píšeš dva články na příbuzné téma (např. dvakrát stejný stroj), dej každému
+jiný úhel: jeden na výkon, druhý na cenu, třetí na srovnání s konkurencí. Pokud by měly být
+skoro stejné i obsahem, **radši ten druhý článek nepiš** — odlišná meta pole problém jen zmírní,
+neodstraní.
+
+Délku počítej ve znacích včetně mezer a diakritiky (`ř`, `č` = 1 znak). Nikdy nepiš text delší,
+než je limit, a pak ho neřež uprostřed slova — rovnou ho napiš tak, aby se vešel.
 
 **Formátovací pravidla (web Profifarmar nezpracovává markdown):**
 
@@ -222,6 +245,9 @@ Po uložení zaznamenej výsledek do logu:
 
 PEREX: Americká firma NEXAT dosáhla v Brazílii nového světového rekordu ve sklizni sóji — 637 tun za 8 hodin. Klíčem byl inovativní modul NEXCO se spotřebou pouhých 7,5 l/ha.
 
+META_TITLE: Světový rekord ve sklizni sóji: 637 tun za 8 hodin
+META_DESCRIPTION: Modul NEXCO od firmy NEXAT sklidil v brazilské Bahii 637 tun sóji za osm hodin při spotřebě 7,5 l/ha. Co za rekordem stojí a co znamená pro sklizňovou techniku.
+
 <h2>Nový rekord v brazilské Bahii</h2>
 <p>V brazilském státě Bahia padl nový světový rekord ve sklizni sóji. Americká firma NEXAT představila modul NEXCO, který umožnil průlomový výsledek v oblasti sklizňové techniky.</p>
 
@@ -245,7 +271,10 @@ PEREX: Americká firma NEXAT dosáhla v Brazílii nového světového rekordu ve
 3. `body` začíná bullet body (`<p><strong>`), ne perexem
 4. Podnadpisy = `<h2>`, odstavce = `<p>`
 5. Zdroje = klikatelné `<a href="plná-url">doména.cz</a>`
-6. Datum se do body nevkládá (řeší CMS)
-7. Krok 1b proběhl na **kompletním** seznamu publikovaných článků (`?limit=10000`, žádné
-   omezení na "posledních N"), a žádné z 3 vybraných témat se neshoduje s existujícím
-   publikovaným článkem — ani doslovně, ani jako stejná událost/akce s jiným úhlem
+6. `META_TITLE` a `META_DESCRIPTION` = samostatné řádky s prefixem, bez HTML tagů
+7. `META_TITLE` **max 60 znaků**, `META_DESCRIPTION` **150–160 znaků** — spočítej si to, neodhaduj
+8. Žádné dva články v dávce nemají stejný ani skoro stejný `META_TITLE`
+9. Datum se do body nevkládá (řeší CMS)
+10. Krok 1b proběhl na **kompletním** seznamu publikovaných článků (`?limit=10000`, žádné
+    omezení na "posledních N"), a žádné z 3 vybraných témat se neshoduje s existujícím
+    publikovaným článkem — ani doslovně, ani jako stejná událost/akce s jiným úhlem

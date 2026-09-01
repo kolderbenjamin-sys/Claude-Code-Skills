@@ -64,7 +64,22 @@ def local_skill_roots() -> list[Path]:
     if env:
         roots.append(Path(env).expanduser())
     home = Path.home() / ".claude" / "skills"
-    roots.append(home / "synced")  # skilly synchronizované z claude.ai (Cowork)
+    synced = home / "synced"
+    roots.append(synced)  # skilly synchronizované z claude.ai (Cowork)
+    # Novější sync ukládá skilly ještě o úroveň níž, do složky pojmenované ID
+    # bucketu (synced/<uuid>_<uuid>/<skill>/SKILL.md). Bez tohohle kroku by
+    # `synced/` vypadala prázdná a všechny skilly by se hlásily jako JEN REPO.
+    if synced.is_dir():
+        for bucket in sorted(synced.iterdir()):
+            if not bucket.is_dir() or bucket.name.startswith("."):
+                continue
+            if (bucket / "SKILL.md").is_file():
+                continue  # sama je skillem, ne bucketem
+            if (bucket / "manifest.json").is_file() or any(
+                child.is_dir() and (child / "SKILL.md").is_file()
+                for child in bucket.iterdir()
+            ):
+                roots.append(bucket)
     roots.append(home)  # ručně nainstalované skilly
     seen, out = set(), []
     for r in roots:

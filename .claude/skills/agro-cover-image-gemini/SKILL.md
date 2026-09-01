@@ -20,6 +20,18 @@ Profifarmar.cz, který na obrázek čeká. Použij tento skill, když **žádný
 neexistuje** — pokud už uživatel obrázek má v pracovní složce, použij místo toho
 `agro-cover-image`, který je rovnou páruje a nahrává.
 
+**Obrázek se generuje výhradně v Gemini v prohlížeči.** Cloudinary je v tomhle skillu jen
+úložiště pro hotový soubor (Krok 6 — `upload`). Nikdy nepoužívej placené generování obrázků,
+zvlášť ne `mcp__Cloudinary__generate-image` ani `mcp__Cloudinary__generate-image-from-images`
+— generování je u Cloudinary placený add-on s omezenou free kvótou (50 kusů) a po jejím
+vyčerpání se každý obrázek účtuje. Totéž platí pro jakýkoli jiný placený generátor (OpenAI
+images, Replicate, Fal). Když Gemini není dostupné, **žádnou náhradu nehledej** — nech
+`cover_image_url` prázdný, článek ve stavu `draft` a zapiš:
+
+```
+[COVER-GEMINI] Obrázek nevygenerován — Gemini není dostupné. Článek zůstává draft bez coveru.
+```
+
 Plně autonomní — neptej se uživatele na detaily promptu ani výběr článku, rozhodni sám
 podle obsahu článku. Jediné místo, kde má smysl uživatele zapojit, je krok 4 (vizuální
 kontrola vygenerovaného obrázku před publikací) — viz níže.

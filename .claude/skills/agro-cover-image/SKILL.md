@@ -4,6 +4,12 @@ description: >
   Nahraje cover obrázky k zemědělským článkům na Profifarmar.cz s inteligentním přiřazením podle obsahu. Pipeline: najde všechny obrázky v pracovní složce, vizuálně zanalyzuje obsah každého, načte články bez cover_image_url přes Profifarmar API, spáruje obrázky s články podle kontextu (co je na obrázku vs. téma článku), případně zkomprimuje obrázky větší než 10 MB kvůli limitu Cloudinary, nahraje je do Cloudinary, nastaví cover_image_url a změní status článku na published. Podporuje zpracování jednoho i více obrázků najednou. Použij tento skill vždy, když uživatel chce přidat nebo nahrát titulní / cover obrázek k zemědělskému článku na Profifarmar.cz nebo publikovat článek s obrázkem
 ---
 
+**Tenhle skill obrázky negeneruje — jen páruje a nahrává ty, které už existují.** Když
+v pracovní složce žádný obrázek není, přepni na `agro-cover-image-gemini` (generuje v Gemini
+v prohlížeči). Nikdy nesahej po placeném generování — `mcp__Cloudinary__generate-image` ani
+`mcp__Cloudinary__generate-image-from-images` nepoužívej, Cloudinary je tady výhradně úložiště.
+Generování je u něj placený add-on s omezenou free kvótou.
+
 # Agro Cover Image Skill
 
 Nahraje obrázky z pracovní složky na Cloudinary a inteligentně je přiřadí jako cover image k článkům bez obrázku na Profifarmar.cz. Podporuje hromadné zpracování více obrázků najednou s párováním podle vizuálního obsahu. Plně autonomní — žádné dotazy na uživatele.
