@@ -113,7 +113,13 @@ alternativě**. Nech `cover_image_url` prázdný, článek nech ve stavu `draft`
 
 Obrázek doplní uživatel ručně nebo pozdější běh `agro-cover-image-gemini`.
 
-## 5. Co v repu není
+## 5. Brandová pravidla
+
+Psaní názvu `ProfiFarmář`, brandové barvy, logo a formáty pro sociální sítě popisuje
+[`BRAND.md`](BRAND.md). Platí pro všechno, co uvidí čtenář — texty příspěvků, Canva
+vizuály, story i titulní obrázky.
+
+## 6. Co v repu není
 
 `agro-aktuality` a `agro-stories-cloud` si vedou logy v kořeni repa
 (`posted-ticker-log.json`, `posted-stories-log.json`) — paměť proti duplicitám.
