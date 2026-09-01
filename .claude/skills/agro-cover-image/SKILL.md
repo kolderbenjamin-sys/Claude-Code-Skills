@@ -13,6 +13,12 @@ description: >
   Aktivuj i když uživatel jen řekne "přidej obrázek" v kontextu zemědělských článků.
 ---
 
+**Tenhle skill obrázky negeneruje — jen páruje a nahrává ty, které už existují.** Když
+v pracovní složce žádný obrázek není, přepni na `agro-cover-image-gemini` (generuje v Gemini
+v prohlížeči). Nikdy nesahej po placeném generování — `mcp__Cloudinary__generate-image` ani
+`mcp__Cloudinary__generate-image-from-images` nepoužívej, Cloudinary je tady výhradně úložiště.
+Generování je u něj placený add-on s omezenou free kvótou.
+
 # Agro Cover Image Skill
 
 Nahraje obrázek z pracovní složky na Cloudinary a přiřadí ho jako cover image k nejnovějšímu článku bez obrázku na Profifarmar.cz. Poté článek publikuje. Plně autonomní — žádné dotazy na uživatele.

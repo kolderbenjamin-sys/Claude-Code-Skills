@@ -87,7 +87,33 @@ Porovnání: `python3 .claude/skills/skills-sync/scripts/skills_diff.py --repo .
 **Konce řádků:** kopie ze syncu chodí s CRLF, repo má LF. Není to rozdíl v obsahu —
 `skills_diff.py` to normalizuje. Nediv se, když `diff` ukáže celý soubor jako změněný.
 
-## 4. Co v repu není
+## 4. Obrázky se generují jen v Gemini — nikdy přes placené API
+
+Titulní obrázky k článkům vznikají **výhradně v Gemini v prohlížeči** postupem, který
+popisuje [`agro-cover-image-gemini`](.claude/skills/agro-cover-image-gemini/SKILL.md).
+Cloudinary slouží **jen jako úložiště** — hotový soubor se tam nahraje (`upload`), nic se
+tam negeneruje.
+
+Zakázané je volat generování obrázků přes MCP nebo API, které se účtuje:
+
+- `mcp__Cloudinary__generate-image`, `mcp__Cloudinary__generate-image-from-images`
+- jakýkoli jiný placený generátor obrázků (OpenAI images, Replicate, Fal, …)
+
+Cloudinary má generování jako **placený add-on** — free kredity jsou omezené (kvóta 50
+generací) a po jejich vyčerpání se za každou další účtuje. Jedno „rychlejší" vygenerování
+obrázku tímhle způsobem tedy stojí peníze, i když to na první pohled vypadá jako součást
+už zaplaceného úložiště.
+
+Když Gemini není po ruce (běh bez prohlížeče, cloud Routine), **nesahej po placené
+alternativě**. Nech `cover_image_url` prázdný, článek nech ve stavu `draft` a zapiš do logu:
+
+```
+[COVER] Obrázek nevygenerován — Gemini není dostupné. Článek zůstává draft bez coveru.
+```
+
+Obrázek doplní uživatel ručně nebo pozdější běh `agro-cover-image-gemini`.
+
+## 5. Co v repu není
 
 `agro-aktuality` a `agro-stories-cloud` si vedou logy v kořeni repa
 (`posted-ticker-log.json`, `posted-stories-log.json`) — paměť proti duplicitám.

@@ -334,6 +334,21 @@ Kolize řeš jiným úhlem pohledu (jeden článek na výkon, druhý na cenu, t�
 s konkurencí), ne přidáním čísla nebo roku na konec. Kontroluj i články ve stejné dávce
 navzájem, nejen proti DB.
 
+**Porovnávej i titulky, nejen `meta_title`.** Starší články mají meta pole prázdná, takže
+kontrola proti `meta_title` u nich nic nenajde — a přesně na stejné téma přitom už článek
+existovat může. Projeď proto i `title` všech článků a hledej shodu v klíčových slovech:
+
+```powershell
+$klic = "sklizeň obilovin"   # 2–3 hlavní slova z tématu
+($response.Content | ConvertFrom-Json).data |
+    Where-Object { $_.title -and $_.title.ToLower().Contains($klic) } |
+    ForEach-Object { Write-Output "[PUBLISHER] PODOBNÝ ČLÁNEK: $($_.title)" }
+```
+
+Výpis vždy dotahuj s `?limit=10000` — jsou v něm i drafty a ty mají `published_at` prázdné.
+Na `null` hodnoty (`published_at`, `meta_title`, `cover_image_url`) kontrola nesmí spadnout;
+ošetři je, jinak seznam skončí v půlce a kolizi přehlédneš.
+
 **Kontrola délek — počítej, neodhaduj:**
 
 ```powershell
