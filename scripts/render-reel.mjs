@@ -4,6 +4,11 @@
 // Usage: node render-reel.mjs <input.json> <output.png>
 //   input.json: { titulek, kategorie, datum, coverPath, assetsDir, layout? }
 //     layout: "band" (výchozí) | "fullbleed"
+//     columns: "safe" (výchozí) | "wide"
+//       safe — sloupec 800 px vycentrovaný (140 / 140). Okraje jsou symetrické
+//              a pravý konec linky i patičky končí před sloupcem ikon (x≈958).
+//       wide — sloupec 60 → 1014 jako u story. Vypadá to jako feed post, ale
+//              pravý konec patičky leží pod ikonami sdílet / uložit.
 //     layers: true → místo jednoho PNG uloží dvě vrstvy vedle <output.png>:
 //             <output>.bg.png  (jen fotka, plné 1080x1920)
 //             <output>.fg.png  (pás, štítek a sazba, s alfou)
@@ -90,11 +95,17 @@ const C = {
 };
 
 const LAYOUT = cfg.layout === 'fullbleed' ? 'fullbleed' : 'band';
+const COLUMNS = cfg.columns === 'wide' ? 'wide' : 'safe';
+
+// Sloupec ikon Instagramu (like / komentář / sdílet / uložit) leží zhruba na
+// x = 958-1036, y = 1040-1620 — odměřeno ze snímku živého reelu 2. 9. 2026.
+const COL = COLUMNS === 'wide'
+  ? { marginX: 60,  textW: 954 }
+  : { marginX: 140, textW: 800 };
 
 const M = {
   W: 1080, H: 1920,
-  marginX: 60,
-  textW: 800,          // 60 → 860; pravý sloupec ikon IG začíná kolem x=880
+  ...COL,
   ruleH: 7,            // gold divider, full-bleed
   padTop: 40,          // cream edge → date ink
   dateGap: 35,         // date ink → headline ink
