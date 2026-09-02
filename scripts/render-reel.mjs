@@ -119,7 +119,7 @@ const M = {
   dateGap: 35,         // date ink → headline ink
   hairlineGap: 60,     // headline ink → hairline
   footerGap: 24,       // hairline → footer ink
-  footerBottom: 1470,  // poslední ink řádek; jméno účtu a popisek začínají ~1540
+  footerBottom: 1520,  // poslední ink řádek; níž už začíná jméno účtu (~1550)
   panelTopMin: 700,
   panelTopMax: 1000,
   bandBottomPad: 56,   // cream pod patičkou, než band skončí (jen layout "band")
