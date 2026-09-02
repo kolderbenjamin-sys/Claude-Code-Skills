@@ -3,6 +3,7 @@
 #
 # Použití:
 #   scripts/png-to-reel.sh <vstup.png> <vystup.mp4> [délka_s] [panel_top_px]
+#   scripts/png-to-reel.sh --overlay <fg.png> <bg.png> <vystup.mp4> [délka_s]
 #
 #   panel_top_px  y-souřadnice, kde začíná textový panel. Zoomuje se jen část
 #                 nad ní. Když se neuvede, skript ji z obrázku odhadne sám.
@@ -24,6 +25,16 @@
 #
 # ffmpeg v cloud kontejneru není — stáhne se jako npm balíček ffmpeg-static
 # (bez sudo, bez apt).
+# --overlay: dvouvrstvý režim pro reel layout "band" (render-reel.mjs --layers).
+# Zoomuje se jen fotka (bg), sazba (fg, s alfou) leží nehybně navrchu. Bez toho
+# by zoom odtáhl titulek z bezpečné zóny, kvůli které se rozvržení posouvalo.
+OVERLAY=""
+if [ "${1:-}" = "--overlay" ]; then
+  OVERLAY="${2:?--overlay potřebuje cestu k fg.png}"
+  shift 2
+  [ -f "$OVERLAY" ] || { echo "[REEL] CHYBA — overlay neexistuje: $OVERLAY"; exit 1; }
+fi
+
 set -euo pipefail
 
 IN="${1:?usage: png-to-reel.sh <in.png> <out.mp4> [seconds] [panel_top_px]}"
@@ -56,7 +67,9 @@ read -r W H < <("$FFMPEG" -i "$IN" 2>&1 \
 # --- kde začíná textový panel --------------------------------------------
 # Vytáhne 8px sloupec u levého okraje jako raw RGB a odspodu hledá poslední
 # řádek, který má pořád barvu spodní hrany (= jednolitý panel).
-if [ "$PANEL_TOP" = "auto" ]; then
+if [ -n "$OVERLAY" ]; then
+  PANEL_TOP=0        # v překryvném režimu se zoomuje celá fotka, text je jinde
+elif [ "$PANEL_TOP" = "auto" ]; then
   PANEL_TOP=$("$FFMPEG" -loglevel error -i "$IN" \
       -vf "crop=8:ih:0:0,format=rgb24" -f rawvideo - \
     | node -e '
@@ -104,9 +117,20 @@ fade=t=out:st=$FADE_OUT_AT:d=0.5,format=yuv420p[v]"
 fi
 
 # --- render ---------------------------------------------------------------
+OVERLAY_IN=()
+if [ -n "$OVERLAY" ]; then
+  OVERLAY_IN=(-loop 1 -i "$OVERLAY")
+  # fade patří až na složený obraz, jinak by se sazba objevila dřív než fotka
+  FILTER="${FILTER%,fade=t=out*}"
+  FILTER="[0:v]scale=$((W*2)):-2:flags=lanczos,$ZP:s=${W}x${H}[bgz];\
+[bgz][2:v]overlay=0:0:format=auto,\
+fade=t=out:st=$FADE_OUT_AT:d=0.5,format=yuv420p[v]"
+fi
+
 "$FFMPEG" -y -loglevel error \
   -loop 1 -i "$IN" \
   -f lavfi -i "anullsrc=channel_layout=stereo:sample_rate=44100" \
+  "${OVERLAY_IN[@]}" \
   -t "$DUR" \
   -filter_complex "$FILTER" \
   -map "[v]" -map 1:a \
