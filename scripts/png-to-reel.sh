@@ -12,6 +12,10 @@
 # Proč se text nezoomuje: zoom-in ořezává od okrajů, takže titulek i patička
 # vylezou z rámu. Fotka se hýbe, panel drží — přesně jak to vypadá v reelech.
 #
+# Proč se nefaduje ze černé: první snímek reelu je zároveň výchozí náhled
+# v Instagram gridu — fade-in z černé tam udělá černou dlaždici. Video proto
+# začíná rovnou obrazem, faduje se jen konec.
+#
 # Proč tichá audio stopa: Instagram Reels přes Buffer odmítá část uploadů bez
 # audio streamu.
 #
@@ -93,10 +97,10 @@ if [ "$PT" -gt 0 ]; then
 [a]crop=$W:$PT:0:0,scale=$((W*2)):-2:flags=lanczos,$ZP:s=${W}x${PT}[top];\
 [b]crop=$W:$PANEL_H:0:$PT,fps=$FPS[bot];\
 [top][bot]vstack=inputs=2,\
-fade=t=in:st=0:d=0.5,fade=t=out:st=$FADE_OUT_AT:d=0.5,format=yuv420p[v]"
+fade=t=out:st=$FADE_OUT_AT:d=0.5,format=yuv420p[v]"
 else
   FILTER="[0:v]scale=$((W*2)):-2:flags=lanczos,$ZP:s=${W}x${H},\
-fade=t=in:st=0:d=0.5,fade=t=out:st=$FADE_OUT_AT:d=0.5,format=yuv420p[v]"
+fade=t=out:st=$FADE_OUT_AT:d=0.5,format=yuv420p[v]"
 fi
 
 # --- render ---------------------------------------------------------------
