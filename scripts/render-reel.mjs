@@ -9,8 +9,11 @@
 //       gradient  — fotka nezakrytá, sazba leží na tmavém přechodu
 //       card      — fotka nezakrytá, sazba v krémové kartě odsazené od krajů
 //     columns: "safe" (výchozí) | "wide"
-//       safe — sloupec 60 → 920. Vlevo u kraje jako u story (tam UI nic
-//              nekreslí), vpravo končí 38 px před sloupcem ikon (x≈958).
+//       safe — sloupec 140 → 860, počítaný na TELEFON, ne na plné 1080 px.
+//              Reel 9:16 se na dnešních displejích ořezává po stranách:
+//              iPhone 19.5:9 vidí x 97-983, Android 20:9 jen x 108-972.
+//              Sloupec 60 → 920 proto na iPhonu lepil titulek na kraj a
+//              štítek kategorie byl useknutý (ověřeno na živém reelu).
 //       wide — sloupec 60 → 1014 jako u story. Vypadá to jako feed post, ale
 //              pravý konec patičky leží pod ikonami sdílet / uložit.
 //     layers: true → místo jednoho PNG uloží dvě vrstvy vedle <output.png>:
@@ -105,8 +108,8 @@ const COLUMNS = cfg.columns === 'wide' ? 'wide' : 'safe';
 // Sloupec ikon Instagramu (like / komentář / sdílet / uložit) leží zhruba na
 // x = 958-1036, y = 1040-1620 — odměřeno ze snímku živého reelu 2. 9. 2026.
 const COL = COLUMNS === 'wide'
-  ? { marginX: 60, textW: 954 }   // až k x=1014 — konec patičky leží pod ikonami
-  : { marginX: 60, textW: 860 };  // až k x=920 — těsně před sloupec ikon
+  ? { marginX: 60,  textW: 954 }  // 60 → 1014, jako story; na telefonu se ořeže
+  : { marginX: 140, textW: 720 }; // 140 → 860, přežije boční ořez i sloupec ikon
 
 const M = {
   W: 1080, H: 1920,
@@ -116,7 +119,7 @@ const M = {
   dateGap: 35,         // date ink → headline ink
   hairlineGap: 60,     // headline ink → hairline
   footerGap: 24,       // hairline → footer ink
-  footerBottom: 1400,  // poslední ink řádek nad UI vrstvou reelu (~500 px)
+  footerBottom: 1470,  // poslední ink řádek; jméno účtu a popisek začínají ~1540
   panelTopMin: 700,
   panelTopMax: 1000,
   bandBottomPad: 56,   // cream pod patičkou, než band skončí (jen layout "band")
