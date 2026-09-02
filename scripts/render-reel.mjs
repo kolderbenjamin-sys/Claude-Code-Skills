@@ -3,7 +3,11 @@
 //
 // Usage: node render-reel.mjs <input.json> <output.png>
 //   input.json: { titulek, kategorie, datum, coverPath, assetsDir, layout? }
-//     layout: "band" (výchozí) | "fullbleed"
+//     layout: "band" (výchozí) | "fullbleed" | "gradient" | "card"
+//       band      — krémový pás přes celou šířku, fotka nad ním i pod ním
+//       fullbleed — pás až ke spodní hraně jako u story
+//       gradient  — fotka nezakrytá, sazba leží na tmavém přechodu
+//       card      — fotka nezakrytá, sazba v krémové kartě odsazené od krajů
 //     columns: "safe" (výchozí) | "wide"
 //       safe — sloupec 60 → 920. Vlevo u kraje jako u story (tam UI nic
 //              nekreslí), vpravo končí 38 px před sloupcem ikon (x≈958).
@@ -94,7 +98,8 @@ const C = {
   footer: '#2A261F',
 };
 
-const LAYOUT = cfg.layout === 'fullbleed' ? 'fullbleed' : 'band';
+const LAYOUT = ['fullbleed', 'gradient', 'card'].includes(cfg.layout) ? cfg.layout : 'band';
+const CARD_INSET = 48;   // vnitřní okraj krémové karty (layout "card")
 const COLUMNS = cfg.columns === 'wide' ? 'wide' : 'safe';
 
 // Sloupec ikon Instagramu (like / komentář / sdílet / uložit) leží zhruba na
@@ -134,7 +139,8 @@ const html = `<!doctype html><html lang="cs"><head><meta charset="utf-8">
 
   /* No logo or wordmark over the cover: Instagram already draws the account name
      and avatar in the top overlay, so repeating the brand there just competes with it. */
-  #cover{ position:absolute; top:0; left:0; width:${M.W}px; height:${M.H}px; overflow:hidden; }
+  #cover{ position:absolute; top:0; left:0; width:${M.W}px; height:${M.H}px; overflow:hidden; z-index:0; }
+  #pill,#rule,#panel,#ruleBottom,#textblock,#hairline,#footer{ z-index:2; }
   #cover img{ width:100%; height:100%; object-fit:cover; object-position:center; display:block; }
 
   #pill{ position:absolute; left:${M.marginX - 7}px; top:900px;
@@ -149,6 +155,24 @@ const html = `<!doctype html><html lang="cs"><head><meta charset="utf-8">
   /* spodní hrana krémového pásu — jen v layoutu "band", kde pod ním pokračuje fotka */
   #ruleBottom{ position:absolute; left:0; top:0; width:${M.W}px; height:${M.ruleH}px;
                background:${C.rule}; display:none; }
+
+  /* tmavý přechod pod sazbou — layout "gradient". Fotka zůstane celá vidět,
+     text drží kontrast i na světlé obloze nebo strništi. */
+  #scrim{ position:absolute; left:0; top:0; width:${M.W}px; height:${M.H}px; display:none;
+          background:linear-gradient(to bottom,
+            rgba(19,15,10,0) 0%, rgba(19,15,10,.10) 34%, rgba(19,15,10,.62) 54%,
+            rgba(19,15,10,.88) 70%, rgba(19,15,10,.94) 100%); }
+
+  body.gradient #scrim{ display:block; }
+  body.gradient #panel, body.gradient #rule, body.gradient #ruleBottom{ display:none; }
+  body.gradient #titulek{ color:#F7F2E8; }
+  body.gradient #datum{ color:#E8C874; }
+  body.gradient #hairline{ background:rgba(244,239,229,.32); }
+  body.gradient #footer .l{ color:#EFE9DC; }
+  body.gradient #footer .r{ color:#E8C874; }
+
+  body.card #rule, body.card #ruleBottom{ display:none; }
+  body.card #panel{ border-radius:14px; box-shadow:0 24px 60px rgba(19,15,10,.34); }
 
   /* bottom-anchored so short and long headlines share the same optical rhythm */
   #textblock{ position:absolute; left:${M.marginX}px; width:${M.textW}px; bottom:400px; }
@@ -166,7 +190,8 @@ const html = `<!doctype html><html lang="cs"><head><meta charset="utf-8">
               letter-spacing:.096em; color:${C.footer}; }
   #footer .r{ font-family:'Montserrat',sans-serif; font-weight:600; font-size:26px;
               letter-spacing:.051em; color:${C.gold}; }
-</style></head><body>
+</style></head><body class="${LAYOUT}">
+  <div id="scrim" style="z-index:1"></div>
   <div id="cover"><img src="data:${coverMime};base64,${coverBuf.toString('base64')}" alt=""></div>
   <div id="pill">${esc(cfg.kategorie)}</div>
   <div id="rule"></div>
@@ -191,6 +216,17 @@ await page.evaluate(() => document.fonts.ready);
 const layout = await page.evaluate((m) => {
   const $ = (id) => document.getElementById(id);
   const title = $('titulek'), block = $('textblock'), footer = $('footer');
+
+  // Karta je odsazená od krajů, takže sazba uvnitř ní má vlastní, užší sloupec.
+  // Musí se nastavit dřív, než se měří zalomení titulku.
+  if (m.layout === 'card') {
+    const inner = m.textW - 2 * m.cardInset;
+    for (const el of [block, $('hairline'), footer]) {
+      el.style.left = m.marginX + m.cardInset + 'px';
+      el.style.width = inner + 'px';
+    }
+    $('pill').style.left = m.marginX + m.cardInset - 7 + 'px';
+  }
 
   // 1. Pin the footer so its last ink row lands on m.footerBottom, then hang the
   //    hairline and the headline block off it using the measured feed-post gaps.
@@ -224,24 +260,39 @@ const layout = await page.evaluate((m) => {
   const panelTop = Math.round(
     Math.min(m.panelTopMax, Math.max(m.panelTopMin, block.getBoundingClientRect().top - m.padTop)),
   );
-  const bandBottom = m.layout === 'band'
+  const hugsContent = m.layout === 'band' || m.layout === 'card';
+  const bandBottom = hugsContent
     ? Math.round(footer.getBoundingClientRect().bottom + m.bandBottomPad)
     : m.H;
 
-  $('cover').style.height = (m.layout === 'band' ? m.H : panelTop) + 'px';
+  // Fotka je celá jen tam, kde ji panel nezakrývá odshora dolů.
+  $('cover').style.height = (m.layout === 'fullbleed' ? panelTop : m.H) + 'px';
   $('rule').style.top = panelTop - m.ruleH + 'px';
   $('panel').style.top = panelTop + 'px';
   $('panel').style.height = bandBottom - panelTop + 'px';
   $('pill').style.top = panelTop - m.ruleH - m.pillGap - m.pillH + 'px';
+
   if (m.layout === 'band') {
     const rb = $('ruleBottom');
     rb.style.display = 'block';
     rb.style.top = bandBottom + 'px';
   }
+  if (m.layout === 'card') {
+    // karta drží okraje sloupce, ne celou šířku
+    $('panel').style.left = m.marginX + 'px';
+    $('panel').style.width = m.textW + 'px';
+    $('panel').style.top = panelTop - m.cardInset + 'px';
+    $('panel').style.height = bandBottom - panelTop + 2 * m.cardInset + 'px';
+    $('pill').style.top = panelTop - m.cardInset - m.pillGap - m.pillH + 'px';
+  }
+  if (m.layout === 'gradient') {
+    // štítek sedí nad datem, panel se nekreslí
+    $('pill').style.top = panelTop - m.pillGap - m.pillH + 'px';
+  }
 
   return { size, panelTop, bandBottom, footerTop, hairlineTop,
            lines: Math.round(title.getBoundingClientRect().height / (size * m.leading)) };
-}, { ...M, layout: LAYOUT });
+}, { ...M, layout: LAYOUT, cardInset: CARD_INSET });
 
 await page.screenshot({ path: outPath, type: 'png' });
 
@@ -251,7 +302,7 @@ if (LAYERS) {
     page.evaluate(([s, v]) => {
       for (const el of document.querySelectorAll(s)) el.style.visibility = v ? 'visible' : 'hidden';
     }, [sel, on]);
-  const OVERLAY = '#pill,#rule,#ruleBottom,#panel,#textblock,#hairline,#footer';
+  const OVERLAY = '#scrim,#pill,#rule,#ruleBottom,#panel,#textblock,#hairline,#footer';
 
   // pozadí — jen fotka
   await setVis(OVERLAY, false);
