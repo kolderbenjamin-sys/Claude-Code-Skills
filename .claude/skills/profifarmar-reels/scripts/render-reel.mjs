@@ -8,7 +8,7 @@
 //       fullbleed — pás až ke spodní hraně jako u story
 //       gradient  — fotka nezakrytá, sazba leží na tmavém přechodu
 //       card      — fotka nezakrytá, sazba v krémové kartě odsazené od krajů
-//     columns: "safe" (výchozí) | "wide"
+//     columns: "edge" (výchozí) | "safe" | "wide"
 //       safe — sloupec 140 → 860, počítaný na TELEFON, ne na plné 1080 px.
 //              Reel 9:16 se na dnešních displejích ořezává po stranách:
 //              iPhone 19.5:9 vidí x 97-983, Android 20:9 jen x 108-972.
@@ -104,7 +104,7 @@ const C = {
 
 const LAYOUT = ['fullbleed', 'gradient', 'card'].includes(cfg.layout) ? cfg.layout : 'band';
 const CARD_INSET = 48;   // vnitřní okraj krémové karty (layout "card")
-const COLUMNS = ['wide', 'edge'].includes(cfg.columns) ? cfg.columns : 'safe';
+const COLUMNS = ['wide', 'safe'].includes(cfg.columns) ? cfg.columns : 'edge';
 
 // Sloupec ikon Instagramu (like / komentář / sdílet / uložit) leží zhruba na
 // x = 958-1036, y = 1040-1620 — odměřeno ze snímku živého reelu 2. 9. 2026.
