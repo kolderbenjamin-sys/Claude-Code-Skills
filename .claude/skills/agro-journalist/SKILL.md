@@ -2,15 +2,15 @@
 name: agro-journalist
 description: >
   Tento skill použij vždy, když uživatel chce napsat zemědělské zpravodajské články,
-  provést rešerši ze zemědělských zdrojů, vytvořit obsah pro agroweb nebo uložit
-  hotové články do Google Drive.
+  provést rešerši ze zemědělských zdrojů, vytvořit obsah pro agroweb, uložit hotové
+  články do Google Drive a odeslat je do Profifarmar API jako draft.
   Trigger keywords: agro článek, napiš článek, zpravodajství ze zemědělství,
   write agro, agroweb, zemědělské novinky, rešerše agro, články z agrowebu,
   zdroje z google disku, nová várka článků, piš články, nové články.
   Pokud se uživatel zmíní o psaní, rešerši nebo tvorbě zemědělských zpravodajských
   textů — vždy aktivuj tento skill.
 metadata:
-  version: "0.4.1"
+  version: "0.5.0"
   author: "Benjamin Kolder"
 ---
 
@@ -224,7 +224,62 @@ Zapiš všechny 3 články do dokumentu s oddělovači:
 **Záložní postup při selhání GDrive (pokračuj bez přerušení):**
 - Ulož soubor lokálně jako `Články_DD_MM_RRRR.md`
 - Zaznamenej chybu do logu
-- Pokračuj na Krok 6 — předej články přímo do paměti pro publisher
+- Pokračuj na Krok 5.5 — články máš v paměti, POST do API je nezávislý na Drive
+
+---
+
+### Krok 5.5 – POST článků do Profifarmar API jako draft (KRITICKÉ)
+
+**Bez tohoto kroku nemá navazující skill `agro-cover-image-gemini` co zpracovat** —
+hledá články přes API, ne v Drive. Hned po uložení do Drive pošli každý ze 3 článků
+samostatným POST requestem na `https://profifarmar.cz/api/webhook.php`.
+
+**KRITICKÉ — kódování:** payload sestavuj jako hashtable / dict a serializuj přes
+`ConvertTo-Json` (PowerShell) nebo standardní JSON encoder (Bash). **Nikdy** nepiš JSON
+jako raw string s vloženou diakritikou — `ConvertTo-Json` escapuje non-ASCII na `\uXXXX`,
+takže je přenos bezpečný. Diakritika v `title`/`perex`/`body` musí být správně česky.
+
+**Windows (MCP PowerShell — scheduled task, Cowork):**
+
+```powershell
+$apiKey = [System.Environment]::GetEnvironmentVariable("AI_API_KEY", "User")
+$payload = @{
+    title       = "Nadpis článku"
+    perex       = "Plynulý perex 1–2 věty, bez HTML, max 300 znaků."
+    body        = "<h2>Podnadpis</h2><p>...</p><p><em>Zdroje:</em> <a href=`"https://zdroj.cz`">zdroj.cz</a></p>"
+    meta_title       = "SEO titulek, max 60 znaků"
+    meta_description = "SEO popisek, 150–160 znaků"
+    category_id = 3
+    tags        = @("tag1","tag2","tag3")
+    status      = "draft"
+}
+$bytes = [System.Text.Encoding]::UTF8.GetBytes(($payload | ConvertTo-Json -Compress))
+$resp = Invoke-WebRequest -Uri "https://profifarmar.cz/api/webhook.php" -Method POST `
+  -Headers @{ "Authorization" = "Bearer $apiKey"; "Content-Type" = "application/json; charset=utf-8" } `
+  -Body $bytes -UseBasicParsing
+Write-Output $resp.Content
+```
+
+**Linux runner (Bash — routines):**
+
+```bash
+curl -s -X POST "https://profifarmar.cz/api/webhook.php" \
+  -H "Authorization: Bearer $AI_API_KEY" \
+  -H "Content-Type: application/json; charset=utf-8" \
+  --data-binary @- <<'JSON'
+{"title":"...","perex":"...","body":"<h2>...</h2><p>...</p>","meta_title":"...","meta_description":"...","category_id":3,"tags":["tag1","tag2"],"status":"draft"}
+JSON
+```
+
+Kategorie ID: 1=Rostlinná, 2=Živočišná, 3=Technika, 4=Legislativa, 5=Trhy, 6=Agroekologie.
+
+**Pokud article se stejným slugem existuje, API vrátí HTTP 500** → uprav titulek, aby byl unikátní, a zkus znovu.
+
+**Chování při chybě:** zaloguj `[JOURNALIST] WARN — POST selhal pro článek X: <důvod>`
+a pokračuj dalším článkem (Drive kopie zůstává jako záloha).
+
+**Validace:** GET `https://profifarmar.cz/api/webhook.php?limit=10000` musí vrátit 3 nové
+články se `status: draft` a `cover_image_url: null`. Ulož si vrácená `id` jako `[ARTICLE_IDS]`.
 
 ---
 
@@ -233,6 +288,7 @@ Zapiš všechny 3 články do dokumentu s oddělovači:
 Po uložení zaznamenej výsledek do logu:
 ```
 [JOURNALIST] Hotovo — doc: Články_DD_MM_RRRR | Složka: 1xgPZilJp-Tgika4pEG5lpcnalsJ4xIeh
+[JOURNALIST] API — POST: 3/3 draft (IDs: <uuid1>, <uuid2>, <uuid3>)
 ```
 
 ---
@@ -278,3 +334,5 @@ META_DESCRIPTION: Modul NEXCO od firmy NEXAT sklidil v brazilské Bahii 637 tun 
 10. Krok 1b proběhl na **kompletním** seznamu publikovaných článků (`?limit=10000`, žádné
     omezení na "posledních N"), a žádné z 3 vybraných témat se neshoduje s existujícím
     publikovaným článkem — ani doslovně, ani jako stejná událost/akce s jiným úhlem
+11. Krok 5.5 proběhl — všechny 3 články jsou přes API jako `draft` a GET `?limit=10000`
+    je vrací s `cover_image_url: null`; `[ARTICLE_IDS]` uloženy
