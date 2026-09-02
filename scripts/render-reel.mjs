@@ -104,13 +104,19 @@ const C = {
 
 const LAYOUT = ['fullbleed', 'gradient', 'card'].includes(cfg.layout) ? cfg.layout : 'band';
 const CARD_INSET = 48;   // vnitřní okraj krémové karty (layout "card")
-const COLUMNS = cfg.columns === 'wide' ? 'wide' : 'safe';
+const COLUMNS = ['wide', 'edge'].includes(cfg.columns) ? cfg.columns : 'safe';
 
 // Sloupec ikon Instagramu (like / komentář / sdílet / uložit) leží zhruba na
 // x = 958-1036, y = 1040-1620 — odměřeno ze snímku živého reelu 2. 9. 2026.
-const COL = COLUMNS === 'wide'
-  ? { marginX: 60,  textW: 954 }  // 60 → 1014, jako story; na telefonu se ořeže
-  : { marginX: 120, textW: 740 }; // 120 → 860; 12 px za ořezem i na 20:9 displeji
+const COL = {
+  // 60 → 1014, jako story; na telefonu se levá i pravá strana ořeže
+  wide: { marginX: 60, textW: 954 },
+  // 120 → 860; 12 px za ořezem i na nejužším 20:9 displeji
+  safe: { marginX: 120, textW: 740 },
+  // 80 → 860; na plném snímku vypadá lépe, ale na iPhonu (ořez 97 px) a
+  // Androidu 20:9 (108 px) levý okraj mizí a titulek začíná na hraně
+  edge: { marginX: 80, textW: 780 },
+}[COLUMNS];
 
 const M = {
   W: 1080, H: 1920,
