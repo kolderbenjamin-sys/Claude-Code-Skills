@@ -14,6 +14,7 @@
 //              iPhone 19.5:9 vidí x 97-983, Android 20:9 jen x 108-972.
 //              Sloupec 60 → 920 proto na iPhonu lepil titulek na kraj a
 //              štítek kategorie byl useknutý (ověřeno na živém reelu).
+//              120 px je spodní hranice: níž už levý okraj mizí pod ořezem.
 //       wide — sloupec 60 → 1014 jako u story. Vypadá to jako feed post, ale
 //              pravý konec patičky leží pod ikonami sdílet / uložit.
 //     layers: true → místo jednoho PNG uloží dvě vrstvy vedle <output.png>:
@@ -109,7 +110,7 @@ const COLUMNS = cfg.columns === 'wide' ? 'wide' : 'safe';
 // x = 958-1036, y = 1040-1620 — odměřeno ze snímku živého reelu 2. 9. 2026.
 const COL = COLUMNS === 'wide'
   ? { marginX: 60,  textW: 954 }  // 60 → 1014, jako story; na telefonu se ořeže
-  : { marginX: 140, textW: 720 }; // 140 → 860, přežije boční ořez i sloupec ikon
+  : { marginX: 120, textW: 740 }; // 120 → 860; 12 px za ořezem i na 20:9 displeji
 
 const M = {
   W: 1080, H: 1920,
