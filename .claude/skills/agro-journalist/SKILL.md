@@ -185,7 +185,7 @@ než je limit, a pak ho neřež uprostřed slova — rovnou ho napiš tak, aby s
 
 **Pole `body` = čisté HTML, žádný markdown.** Web tyto značky nezpracovává a zobrazuje je jako surový text.
 
-**Perex NIKDY nevkládej do body.** Body začíná bullet body, ne perexem. Jinak se perex na webu zobrazí dvakrát.
+**Perex NIKDY nevkládej do body.** Body začíná prvním podnadpisem `<h2>`, ne perexem ani tučným souhrnným odstavcem. Jinak se perex na webu zobrazí dvakrát.
 
 **Datum do body nevkládej** — řeší ho CMS automaticky.
 
@@ -266,9 +266,9 @@ META_DESCRIPTION: Modul NEXCO od firmy NEXAT sklidil v brazilské Bahii 637 tun 
 
 ### Checklist před uložením
 
-1. `body` (vše od bullet bodů po zdroje) = čisté HTML, žádný markdown
+1. `body` (vše od prvního `<h2>` po zdroje) = čisté HTML, žádný markdown
 2. `perex` = samostatný řádek s prefixem `PEREX:`, plynulý text, BEZ HTML tagů
-3. `body` začíná bullet body (`<p><strong>`), ne perexem
+3. `body` začíná prvním podnadpisem `<h2>` — ne perexem ani tučným souhrnným odstavcem (`<p><strong>…</strong></p>`)
 4. Podnadpisy = `<h2>`, odstavce = `<p>`
 5. Zdroje = klikatelné `<a href="plná-url">doména.cz</a>`
 6. `META_TITLE` a `META_DESCRIPTION` = samostatné řádky s prefixem, bez HTML tagů

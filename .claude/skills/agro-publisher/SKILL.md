@@ -238,7 +238,7 @@ PEREX: 1–2 věty shrnující článek.
 |---|---|
 | `## Podnadpis` nebo `##Podnadpis` | `<h2>Podnadpis</h2>` |
 | Holý text odstavce | `<p>text</p>` |
-| `* Bullet bod` nebo `• Bullet bod` | `<p><strong>Bullet bod</strong></p>` |
+| `* Bullet bod` nebo `• Bullet bod` (jen ve starých doc) | `<p>Bullet bod</p>` — tučný souhrn se už nepoužívá |
 | `*text*` (kurzíva) | `<em>text</em>` |
 | Surové URL za `*Zdroje:*` | `<a href="url">doména.cz</a>` (text odkazu = doména bez `www.`) |
 
@@ -254,7 +254,7 @@ Z každého bloku extrahuj tato pole a **striktně dodrž, co kam patří**:
 | Řádky META_* chybí (starší doc) | `meta_title`, `meta_description` | Dogeneruj je sám podle pravidel v Kroku 3. Nikdy neposílej článek bez nich. |
 | Pokud PEREX řádek chybí a jsou 2 řádky `* ...` | `perex` | Spoj do 1–2 vět, max 300 znaků. Fallback pro starý formát. |
 | `<h2>` sekce + `<p>` odstavce | `body` (od začátku) | Už jsou HTML, nebo převeď z `##` |
-| Odrážky (`<p><strong>…</strong></p>` nebo `* …`) — **jen u starších článků** | `body` (na začátek) | Zachovej tak, jak jsou; markdown převeď na `<p><strong>text</strong></p>`. Do `perex` NIKDY. |
+| Tučný souhrnný odstavec na začátku (`<p><strong>…</strong></p>` nebo `* …`) — **jen u starších článků** | `body` (na začátek) | Nové články ho nemají. U starších převeď markdown na prostý `<p>text</p>` (bez `<strong>`). Do `perex` NIKDY. |
 | `<p><em>Zdroje:</em> <a href=...>` | `body` (na konec) | Už jsou HTML, nebo převeď surové URL na `<a>` |
 | Surové URL za `*Zdroje:*` | `body` (na konec) | Převeď: `<p><em>Zdroje:</em> <a href="url">domena.cz</a></p>` |
 
