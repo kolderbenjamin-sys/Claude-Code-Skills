@@ -5,8 +5,8 @@
 //   input.json: { titulek, kategorie, datum, coverPath, assetsDir, layout? }
 //     layout: "band" (výchozí) | "fullbleed"
 //     columns: "safe" (výchozí) | "wide"
-//       safe — sloupec 800 px vycentrovaný (140 / 140). Okraje jsou symetrické
-//              a pravý konec linky i patičky končí před sloupcem ikon (x≈958).
+//       safe — sloupec 60 → 920. Vlevo u kraje jako u story (tam UI nic
+//              nekreslí), vpravo končí 38 px před sloupcem ikon (x≈958).
 //       wide — sloupec 60 → 1014 jako u story. Vypadá to jako feed post, ale
 //              pravý konec patičky leží pod ikonami sdílet / uložit.
 //     layers: true → místo jednoho PNG uloží dvě vrstvy vedle <output.png>:
@@ -100,8 +100,8 @@ const COLUMNS = cfg.columns === 'wide' ? 'wide' : 'safe';
 // Sloupec ikon Instagramu (like / komentář / sdílet / uložit) leží zhruba na
 // x = 958-1036, y = 1040-1620 — odměřeno ze snímku živého reelu 2. 9. 2026.
 const COL = COLUMNS === 'wide'
-  ? { marginX: 60,  textW: 954 }
-  : { marginX: 140, textW: 800 };
+  ? { marginX: 60, textW: 954 }   // až k x=1014 — konec patičky leží pod ikonami
+  : { marginX: 60, textW: 860 };  // až k x=920 — těsně před sloupec ikon
 
 const M = {
   W: 1080, H: 1920,
