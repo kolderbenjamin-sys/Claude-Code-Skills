@@ -296,8 +296,11 @@ const layout = await page.evaluate((m) => {
     $('pill').style.top = panelTop - m.cardInset - m.pillGap - m.pillH + 'px';
   }
   if (m.layout === 'gradient') {
-    // štítek sedí nad datem, panel se nekreslí
-    $('pill').style.top = panelTop - m.pillGap - m.pillH + 'px';
+    // Bez krémového panelu nemá štítek na co navazovat — pověsit ho na panelTop
+    // znamená, že u krátkého titulku (kde se panelTop opře o horní mez) zůstane
+    // viset vysoko nad datem. Drží se proto přímo horní hrany sazby.
+    const blockTop = block.getBoundingClientRect().top;
+    $('pill').style.top = blockTop - m.pillGap - m.pillH + 'px';
   }
 
   return { size, panelTop, bandBottom, footerTop, hairlineTop,
