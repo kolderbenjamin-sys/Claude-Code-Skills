@@ -1,0 +1,81 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { width:1080px; height:1350px; background:#F5F1E7; overflow:hidden; }
+  body { font-family:"Arial","Helvetica Neue",sans-serif; position:relative; }
+
+  .cover { width:1080px; height:648px; object-fit:cover; display:block; }
+
+  .content { padding:40px 56px 0 56px; }
+
+  .pill {
+    display:inline-block;
+    background:#B5502E;
+    color:#F5F1E7;
+    font-weight:700;
+    font-size:26px;
+    letter-spacing:0.5px;
+    padding:10px 26px;
+    border-radius:8px;
+    text-transform:uppercase;
+    margin-top:-56px;
+  }
+
+  .meta {
+    color:#AD8A3D;
+    font-weight:700;
+    font-size:28px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    margin-top:28px;
+  }
+
+  .title {
+    color:#1C1B17;
+    font-weight:800;
+    font-size:56px;
+    line-height:1.18;
+    margin-top:22px;
+    max-width:970px;
+  }
+
+  .footer {
+    position:absolute;
+    left:0; right:0; bottom:0;
+    height:150px;
+    background:#2C4429;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 56px;
+  }
+
+  .footer img { height:74px; }
+
+  .footer .links {
+    color:#F5F1E7;
+    font-size:24px;
+    font-weight:600;
+    text-align:right;
+    line-height:1.5;
+  }
+
+  .footer .links .more { color:#AD8A3D; }
+</style>
+</head>
+<body>
+  <img class="cover" src="{{COVER_URL}}" />
+  <div class="content">
+    <div class="pill">{{CATEGORY}}</div>
+    <div class="meta">{{DATE}}</div>
+    <div class="title">{{TITLE}}</div>
+  </div>
+  <div class="footer">
+    <img src="{{LOGO_URL}}" />
+    <div class="links">profifarmar.cz<br><span class="more">VÍCE V ČLÁNKU</span></div>
+  </div>
+</body>
+</html>
