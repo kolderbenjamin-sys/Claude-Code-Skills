@@ -3,6 +3,3 @@ __pycache__/
 
 # Claude Code agent worktrees / run-scratch (not part of the repo's source)
 .claude/worktrees/
-experiments/ig-post-comparison/*/timing.json
-experiments/ig-post-comparison/*/_render_*.html
-experiments/ig-post-comparison/parent_start.txt
