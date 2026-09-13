@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="cs"><head><meta charset="utf-8"><link rel="stylesheet" href="brand.css"><title>Týdenní monitor · nejčtenější · carousel</title>
+<style>body{display:flex;flex-direction:column;gap:40px;padding:40px;background:#111}</style></head>
+<body>
+<div class="canvas post photo acc-{{acc}}">
+  <img class="bg" src="{{photo_post}}" alt=""><div class="fade high"></div>
+  <div class="bottom">
+    <span class="chip">{{chip}}</span>
+    <div class="eyebrow">{{eyebrow}}</div>
+    <h1 class="title" style="font-size:60px">{{title}}</h1>
+    <div class="top5">{{#items}}<div class="t5"><i>0{{i1}}</i><span>{{short}}</span></div>{{/items}}</div>
+    <div class="foot-in"><span>{{foot_l}}</span><b>swipe →</b></div>
+  </div>
+</div>
+{{#items}}
+<div class="canvas post photo acc-article">
+  <img class="bg" src="{{photo}}" alt=""><div class="fade"></div>
+  <div class="bottom">
+    <span class="chip red">{{cat}}</span>
+    <div class="eyebrow">nejčtenější týdne · 0{{i1}} / 05</div>
+    <h1 class="title" style="font-size:64px">{{full}}</h1>
+    <div class="foot-in"><span>↗ profifarmar.cz</span><b>více v článku</b></div>
+  </div>
+</div>
+{{/items}}
+</body></html>
