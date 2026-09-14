@@ -150,11 +150,18 @@ node "$SK/scripts/publish.js" "$SK/manifest.json" posted-kampan-log.json "$ID"
 ```
 
 Skript sám vybere formáty podle obsahu kusu: `ig-post` (carousel = víc obrázků), `ig-story`, `ig-reel`,
-`fb-post`, `fb-story`, `fb-reel`, `yt-reel`. Každý úspěch hned zapíše do logu; při opakovaném spuštění
-hotové sloty přeskočí, takže po chybě stačí pustit znovu. Exit 2 = část selhala (log říká která).
+`fb-post`, `fb-story`, `fb-reel`, `yt-reel`. Nejdřív všechny posty vytvoří, pak **čeká na skutečný stav**
+(`get_post` každých 15 s, max 8 min, `--wait` mění): `sent` = OK, `error` = post smaže a jednou pošle znovu,
+podruhé = chyba. Po timeoutu `pending` (Buffer ještě zpracovává, typicky YT) se bere jako OK s poznámkou.
+Každý slot hned zapíše do logu s `postId` a `status`; při opakovaném spuštění sloty s `ok: true` přeskočí,
+takže po chybě stačí pustit znovu. Exit 2 = část selhala (výpis i log říká která a proč).
 
-Ověřeno 13. 9. 2026 proti živému Bufferu: carousel 5 obrázků, story s prázdným textem (IG i FB),
-YouTube short (`metadata.youtube {title, categoryId:"22"}`), reel s `shouldShareToFeed:false`.
+Obrázky posílá vždy jako **JPEG** (Cloudinary `f_jpg,q_auto:good` v URL, bez nového uploadu). Důvod: 14. 9. 2026
+Instagram odmítl PNG story ("There is an issue with the media included"), FB stejný soubor vzal; publish.js
+to tehdy zalogoval jako OK, protože kontroloval jen přijetí Bufferem. Od té doby se ověřuje `sent`.
+
+Ověřeno proti živému Bufferu: carousel 5 obrázků, story s prázdným textem (IG i FB), YouTube short
+(`metadata.youtube {title, categoryId:"22"}`), reel s `shouldShareToFeed:false`, run 14. 9. 7/7 `sent`.
 
 ## Krok 4 - commit
 
@@ -198,6 +205,8 @@ log: 4/4 · commit ok
 | Reel bez ffmpeg | `npm i ffmpeg-static` a `export FFMPEG=$(node -p "require('ffmpeg-static')")` |
 | Buffer 406 | header `Accept: text/event-stream, application/json` (publish.js ho posílá) |
 | Buffer odmítne story kvůli textu | publish.js zkusí znovu s názvem kusu jako textem |
+| Post skončí `error` "issue with the media" | IG nebere PNG story; publish.js posílá JPEG přes `f_jpg` a při erroru jednou znovu. Když padne i podruhé, zkontroluj URL v prohlížeči |
+| Slot skončí `pending` | Buffer ještě zpracovává (YT až 10 min): `get_post {postId}` z logu; když je `sent`, nic nedělej |
 | Reel se objevil v mřížce IG | `shouldShareToFeed` musí být `false` (publish.js) |
 | Kus vydán dvakrát | log se nekomitnul, viz Krok 0 a 4 |
 | Fotky v K2 renderu prázdné | Cloudinary transformace v URL (`w_1080,h_1350,c_fill`) a síť z kontejneru; `networkidle` čeká na načtení |
