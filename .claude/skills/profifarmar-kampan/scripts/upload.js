@@ -7,7 +7,7 @@ const { CLOUDINARY_CLOUD_NAME: CLOUD, CLOUDINARY_API_KEY: KEY, CLOUDINARY_API_SE
 if (!file || !publicId) { console.error('usage: upload.js <file> <public_id>'); process.exit(1); }
 if (!CLOUD || !KEY || !SECRET) { console.error('[KAMPAN] CHYBA - Cloudinary proměnné chybí (viz SECRETS.md)'); process.exit(1); }
 (async () => {
-  const kind = file.endsWith('.mp4') ? 'video' : 'image', folder = 'SOCIALS/kampan', ts = String(Math.floor(Date.now() / 1000));
+  const kind = file.endsWith('.mp4') ? 'video' : 'image', folder = 'KAMPAN', ts = String(Math.floor(Date.now() / 1000));
   const sig = crypto.createHash('sha1').update(`folder=${folder}&overwrite=true&public_id=${publicId}&timestamp=${ts}${SECRET}`).digest('hex');
   const fd = new FormData();
   fd.append('file', new Blob([fs.readFileSync(file)]), file.split(/[\/]/).pop());

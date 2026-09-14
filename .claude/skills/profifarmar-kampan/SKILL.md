@@ -192,6 +192,8 @@ log: 4/4 · commit ok
 - `status: manual` = Ben vydal ručně (K1-01 14. 9., K2-puda-38 16. 9.), `waiting` = čeká na obsah
   (K1-15 O nás, odpovědi Bena a Ondry), `done` lze nastavit ručně pro vynechání.
 - Nový hotový kus: nahrát soubory (`upload.js`) a doplnit `images/story/reel/ig/fb` přes `set-item.js`.
+- Assety leží v Cloudinary složce **`KAMPAN/`**, ne v `SOCIALS/`: pondělní úklidová routine maže v `SOCIALS/`
+  vše starší 48 h bez odeslaného postu, což by kampaňové kusy nahrané dopředu smazalo.
 - K1-06 Cenový pásek a K2 Ceny komodit nejsou v manifestu: čekají na Kč/t na webu.
 - Zdrojové šablony, data a rendery všech K1 kusů jsou lokálně u Bena v
   `Claude-Workspace/Agro/ProfiFarmar-info/social-kampane/` (`make_manifest.py` manifest přegeneruje).
