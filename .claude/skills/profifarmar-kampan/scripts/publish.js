@@ -45,8 +45,9 @@ async function buffer(name, args) {
   try { return JSON.parse(txt); } catch { return txt; }
 }
 
-// Cloudinary: PNG → JPEG přímo v URL, žádný nový upload. Jiné hosty nechá být.
-const jpg = (url) => /res\.cloudinary\.com\/[^/]+\/image\/upload\/(?!.*f_jpg)/.test(url) ? url.replace('/image/upload/', '/image/upload/f_jpg,q_auto:good/') : url;
+// Cloudinary: PNG → JPEG přímo v URL, žádný nový upload. fl_progressive:none = baseline JPEG,
+// protože q_auto progresivní JPEG Instagram Graph API odmítá ("issue with the media", FB ho bez problému vezme).
+const jpg = (url) => /res\.cloudinary\.com\/[^/]+\/image\/upload\/(?!.*f_jpg)/.test(url) ? url.replace('/image/upload/', '/image/upload/f_jpg,q_auto:good,fl_progressive:none/') : url;
 const img = (url) => ({ image: { url: jpg(url), metadata: { altText: item.alt || item.name } } });
 const vid = (url) => ({ video: { url, metadata: { title: item.name, thumbnailOffset: 1000 } } });
 const link = item.link || 'https://profifarmar.cz/';

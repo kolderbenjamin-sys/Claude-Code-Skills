@@ -8,7 +8,7 @@ if (!out) { console.error('usage: top5.js <out.json> [date]'); process.exit(1); 
 const CAT = { 'rostlinna-vyroba': 'rostlinná výroba', 'zivocisna-vyroba': 'živočišná výroba', technika: 'technika',
   legislativa: 'legislativa a EU', 'trhy-a-ceny': 'trhy a ceny', agroekologie: 'agroekologie' };
 const tf = (url, t) => url.replace('/image/upload/', `/image/upload/${t}/`);
-const POST = 'w_1080,h_1350,c_fill,g_auto,q_auto:good,f_jpg', STORY = 'w_1080,h_1920,c_fill,g_auto,q_auto:good,f_jpg';
+const POST = 'w_1080,h_1350,c_fill,g_auto,q_auto:good,f_jpg,fl_progressive:none', STORY = 'w_1080,h_1920,c_fill,g_auto,q_auto:good,f_jpg,fl_progressive:none';
 function isoWeek(d) { const x = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())); const n = x.getUTCDay() || 7; x.setUTCDate(x.getUTCDate() + 4 - n); const y = new Date(Date.UTC(x.getUTCFullYear(), 0, 1)); return Math.ceil(((x - y) / 864e5 + 1) / 7); }
 (async () => {
   const r = await fetch('https://profifarmar.cz/api/clanky.php?limit=5&order=popular&days=7', { signal: AbortSignal.timeout(60000) });

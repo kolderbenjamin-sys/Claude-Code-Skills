@@ -159,7 +159,7 @@ echo "$errs" | jq -c --arg since "$since" '
 
 Pro **každou** vypsanou story (jen typ `story`, jen z posledních 36 h; reely a feed posty patří jiným skillům):
 
-1. `src` převeď na JPEG: `sed -E 's#/image/upload/(w_[^/]*,)?f_png/#/image/upload/f_jpg,q_auto:good/#; t; s#/image/upload/#/image/upload/f_jpg,q_auto:good/#'`.
+1. `src` převeď na JPEG: `sed -E 's#/image/upload/(w_[^/]*,)?f_png/#/image/upload/f_jpg,q_auto:good,fl_progressive:none/#; t; s#/image/upload/#/image/upload/f_jpg,q_auto:good,fl_progressive:none/#'`.
    Ověř `curl -sI "$jpg_url" | grep -i 'content-type: image/jpeg'`.
 2. Smaž vadný post: `call_buffer delete_post '{"postId":"<id>"}'`.
 3. Pošli story znovu **hned** přes `create_story` s `mode: "shareNow"` (story žije 24 h, na slot už je pozdě),
@@ -298,7 +298,7 @@ print('OK', im.size, im.mode)"
 
 upload_story() {           # $1 = lokální PNG, $2 = public_id
   local png="$1" public_id="$2"
-  local folder="SOCIALS" eager="w_1080,c_scale,q_auto:good,f_jpg" ts sig   # JPEG: Instagram PNG přes Buffer odmítá
+  local folder="SOCIALS" eager="w_1080,c_scale,q_auto:good,f_jpg,fl_progressive:none" ts sig   # JPEG baseline: Instagram odmítá PNG i progresivní JPEG
   ts=$(date +%s)
   # parametry v podpisu MUSÍ být abecedně; file a api_key se do něj nepočítají
   sig=$(printf "eager=%s&folder=%s&overwrite=true&public_id=%s&timestamp=%s%s" \
@@ -314,11 +314,14 @@ cloudinary_url=$(echo "$result" | jq -r '.eager[0].secure_url // .secure_url')
 echo "$cloudinary_url"
 ```
 
-- **Vždy JPEG, nikdy PNG.** Instagram Graph API bere pro obrázky jen JPEG; PNG story (i post) končí na
-  Bufferu jako `status: error` „There is an issue with the media included" — 11. až 14. 9. 2026 takhle
-  propadlo 5 story a 3 feed posty, zatímco FB stejný PNG vzal. `eager` s `f_jpg` vrátí `.jpg` URL, tu posílej
-  do Bufferu. Kdyby ses někdy dostal k PNG URL (starší log), přidej do ní transformaci
-  `/image/upload/f_jpg,q_auto:good/`, nový upload není potřeba.
+- **Vždy JPEG, nikdy PNG — a vždy baseline, ne progresivní.** Instagram Graph API bere pro obrázky jen
+  JPEG; PNG story (i post) končí na Bufferu jako `status: error` „There is an issue with the media
+  included" — 11. až 14. 9. 2026 takhle propadlo 5 story a 3 feed posty, zatímco FB stejný PNG vzal.
+  Navíc `q_auto` u větších obrázků generuje **progresivní** JPEG, který IG odmítne úplně stejnou hláškou i
+  když je to už JPEG (potvrzeno 16. 9. 2026 na K1-02) — proto `fl_progressive:none` v `eager`. `eager` s
+  `f_jpg,fl_progressive:none` vrátí `.jpg` URL, tu posílej do Bufferu. Kdyby ses někdy dostal k PNG/starší
+  URL (starší log), přidej do ní transformaci `/image/upload/f_jpg,q_auto:good,fl_progressive:none/`, nový
+  upload není potřeba.
 - `public_id = story_[DATUM_SLUG]_[ID]` — **prefix `story_` je povinný**. Feed skilly píšou do stejné
   složky `SOCIALS` pod `social_[DATUM_SLUG]_[ID]` a s `overwrite=true` by si assety přepsaly.
 - `public_id` smí obsahovat **jen ASCII**, číslice, pomlčky a podtržítka. Proto `[DATUM_SLUG]`
@@ -675,7 +678,7 @@ pořadí a **vždy vypiš Cloudinary URL i text**, ať se práce neztratí:
 | Titulek přeteče nebo je titěrný | Zkrať ho v Kroku 2 na ~70 znaků; auto-fit je jen záchranná brzda (82 px → min 46 px) |
 | Text ve story překrytý UI Instagramu | Sahal někdo na `M.footerBottom`? Spodních ~200 px musí zůstat prázdných, tam padá lišta odpovědí a link sticker |
 | Cover je divně oříznutý | Renderer dělá `object-fit: cover` na střed. U extrémně širokých fotek radši vyber jiný článek |
-| Story na IG skončí `error` „issue with the media" | Médium je PNG. Instagram bere jen JPEG: upload s `f_jpg` (Krok 4), starší URL opravit transformací `f_jpg,q_auto:good` a poslat znovu (Krok 1a) |
+| Story na IG skončí `error` „issue with the media" | Médium je PNG, nebo progresivní JPEG (od `q_auto` u větších fotek). Instagram bere jen baseline JPEG: upload s `f_jpg,fl_progressive:none` (Krok 4), starší URL opravit transformací `f_jpg,q_auto:good,fl_progressive:none` a poslat znovu (Krok 1a) |
 | Cloudinary `Invalid Signature` | Parametry v podpisu musí být **abecedně** a `eager` v něm musí být; `file` a `api_key` naopak ne |
 | Cloudinary `Invalid public_id` | Jen ASCII — použij `[DATUM_SLUG]`, ne `[DATUM]` s diakritikou a `·` |
 | Story assety přepisují feed assety | `public_id` musí mít prefix `story_`, ne `social_` |

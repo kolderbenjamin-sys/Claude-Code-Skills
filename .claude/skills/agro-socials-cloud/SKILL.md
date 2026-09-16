@@ -130,7 +130,7 @@ upload_to_cloudinary() {
   local timestamp eager folder signature
 
   folder="SOCIALS"
-  eager="w_1080,c_limit,q_auto:good,f_jpg"   # JPEG: Instagram PNG přes Buffer odmítá ("issue with the media included")
+  eager="w_1080,c_limit,q_auto:good,f_jpg,fl_progressive:none"   # JPEG baseline: Instagram odmítá PNG i progresivní JPEG ("issue with the media included")
   timestamp=$(date +%s)
 
   # Cloudinary signature = sha1(sorted params + api_secret), bez file/api_key
