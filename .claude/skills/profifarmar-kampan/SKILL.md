@@ -151,14 +151,26 @@ node "$SK/scripts/publish.js" "$SK/manifest.json" posted-kampan-log.json "$ID"
 
 Skript sám vybere formáty podle obsahu kusu: `ig-post` (carousel = víc obrázků), `ig-story`, `ig-reel`,
 `fb-post`, `fb-story`, `fb-reel`, `yt-reel`. Nejdřív všechny posty vytvoří, pak **čeká na skutečný stav**
-(`get_post` každých 15 s, max 8 min, `--wait` mění): `sent` = OK, `error` = post smaže a jednou pošle znovu,
-podruhé = chyba. Po timeoutu `pending` (Buffer ještě zpracovává, typicky YT) se bere jako OK s poznámkou.
-Každý slot hned zapíše do logu s `postId` a `status`; při opakovaném spuštění sloty s `ok: true` přeskočí,
-takže po chybě stačí pustit znovu. Exit 2 = část selhala (výpis i log říká která a proč).
+(`get_post` každých 15 s, max 8 min, `--wait` mění): `sent` = OK, `error` = post smaže a s 90s prodlevou
+pošle znovu, až 2x (celkem 3 pokusy) - po 3. chybě = chyba. Po timeoutu `pending` (Buffer ještě zpracovává,
+typicky YT) se bere jako OK s poznámkou. Každý slot hned zapíše do logu s `postId` a `status`; při opakovaném
+spuštění sloty s `ok: true` přeskočí, takže po chybě stačí pustit znovu. Exit 2 = část selhala (výpis i log
+říká která a proč).
 
-Obrázky posílá vždy jako **JPEG** (Cloudinary `f_jpg,q_auto:good` v URL, bez nového uploadu). Důvod: 14. 9. 2026
-Instagram odmítl PNG story ("There is an issue with the media included"), FB stejný soubor vzal; publish.js
-to tehdy zalogoval jako OK, protože kontroloval jen přijetí Bufferem. Od té doby se ověřuje `sent`.
+Obrázky posílá vždy jako **JPEG** (Cloudinary `f_jpg,q_auto:good,fl_progressive:none` v URL, bez nového
+uploadu). Důvod: 14. 9. 2026 Instagram odmítl PNG story ("There is an issue with the media included"), FB
+stejný soubor vzal; publish.js to tehdy zalogoval jako OK, protože kontroloval jen přijetí Bufferem. Od té
+doby se ověřuje `sent`. `fl_progressive:none` přibyl 16. 9. 2026 - `q_auto` u větších obrázků dělá
+progresivní JPEG, který IG odmítá stejnou hláškou i když je to už JPEG.
+
+**Reely a videa (16. 9. 2026):** selhání "issue with the media"/"check specifications" u `-reel`/`yt-reel`
+**není vada souboru** - ověřeno ručním re-uploadem přes Buffer UI (stejné video, které API cestou padalo,
+tudy prošlo bez chyby) i tím, že stejné video ve stejné dávce prošlo na jednom kanálu (YouTube) a na druhém
+ne (Instagram). Příčina: `create_post` s `video: {url}}` nechá Instagram natáhnout video přímo z Cloudinary
+URL, a ten fetch je nekonzistentní (pravděpodobně Cloudflare/Cloudinary na straně Mety) - kdežto ruční upload
+v Bufferu si video nejdřív nahraje na vlastní S3 a to je spolehlivé. Buffer API/GraphQL neumožňuje soubor
+nahrát napřímo (jen `url`), takže z publish.js se ta spolehlivější cesta nedá zopakovat - jediná dostupná
+zmírnění jsou víc pokusů s prodlevou (viz výše) a případně eskalace na Buffer support.
 
 Ověřeno proti živému Bufferu: carousel 5 obrázků, story s prázdným textem (IG i FB), YouTube short
 (`metadata.youtube {title, categoryId:"22"}`), reel s `shouldShareToFeed:false`, run 14. 9. 7/7 `sent`.

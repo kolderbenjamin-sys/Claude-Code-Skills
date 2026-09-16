@@ -8,7 +8,9 @@
 // fb-post, fb-story, fb-reel, yt-reel (short). Co už je v logu jako ok, se přeskočí (idempotentní).
 // Obrázky jdou vždy jako JPEG (Cloudinary f_jpg v URL): Instagram odmítl PNG story
 // "There is an issue with the media included" 14. 9. 2026, FB stejný PNG vzal.
-// Když post skončí na Bufferu ve stavu error, jednou se smaže a pošle znovu; podruhé = chyba (exit 2).
+// Když post skončí na Bufferu ve stavu error, až 2x se smaže a pošle znovu (s prodlevou mezi pokusy -
+// selhání u videí je nekonzistentní fetch z Cloudinary přes Metu, ne vada souboru, viz 16. 9. 2026:
+// stejné video jednou prošlo, podruhé ne). Po 3. pokusu = chyba (exit 2).
 // Proč Node a ne bash+jq: payloady pro Buffer jsou vnořené JSONy, v Node se skládají bez escapování.
 const fs = require('fs');
 const [manifestPath, logPath, id, ...flags] = process.argv.slice(2);
@@ -123,15 +125,19 @@ async function finalStatus(pid, deadline) {
   save();
   if (DUE) { for (const r of results) if (r.postId) r.ok = true; save(); console.log(`[KAMPAN] ${id}: naplánováno ${results.filter((r) => r.ok).length}/${results.length}`); return; }
 
-  // 2) ověř skutečný stav; při error jednou smaž a pošli znovu
+  // 2) ověř skutečný stav; při error až 2x smaž a pošli znovu, s prodlevou (dej přechodné chybě šanci zmizet)
   const deadline = Date.now() + WAIT;
+  const MAX_RETRIES = 2, RETRY_DELAY = 90000;
   for (const r of results) {
     if (!r.postId) continue;
     let f = await finalStatus(r.postId, deadline);
-    if (f.status === 'error' && !r.retried) {
-      console.log(`retry ${r.slot}: ${f.error}`);
+    let tries = 0;
+    while (f.status === 'error' && tries < MAX_RETRIES) {
+      tries++;
+      console.log(`retry ${tries}/${MAX_RETRIES} ${r.slot}: ${f.error}`);
       try { await buffer('delete_post', { postId: r.postId }); } catch {}
-      r.retried = true; r.info = 'první pokus: ' + f.error;
+      r.retried = true; r.info = (r.info ? r.info + ' | ' : '') + `pokus ${tries}: ` + f.error;
+      await sleep(RETRY_DELAY);
       try { r.postId = await create(todo.find((s) => s.slot === r.slot)); f = await finalStatus(r.postId, Math.max(deadline, Date.now() + 180000)); }
       catch (e) { f = { status: 'error', error: e.message }; }
     }
