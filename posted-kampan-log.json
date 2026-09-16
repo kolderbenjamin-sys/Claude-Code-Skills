@@ -54,5 +54,49 @@
   "info": "6aa82963546564ef4ca01312",
   "at": "2026-09-14T17:05:41.469Z",
   "mode": "shareNow"
+ },
+ {
+  "id": "K1-02",
+  "slot": "ig-post",
+  "ok": false,
+  "postId": "6aaaae013712317fd6f056aa",
+  "status": "error",
+  "info": "první pokus: There is an issue with the media included. Please remove it and try to upload it again. | {\"message\":\"There is an issue with the media included. Please remove it and try to upload it again.\"}",
+  "at": "2026-09-16T14:56:00.588Z",
+  "mode": "shareNow",
+  "retried": true
+ },
+ {
+  "id": "K1-02",
+  "slot": "ig-story",
+  "ok": false,
+  "postId": null,
+  "status": "create_failed",
+  "info": "{\"message\":\"There is an issue with the media included. Please remove it and try to upload it again.\"}",
+  "at": "2026-09-16T14:56:12.123Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K1-02",
+  "slot": "fb-post",
+  "ok": true,
+  "postId": "6aaaae0f3712317fd6f057eb",
+  "status": "sent",
+  "info": "",
+  "at": "2026-09-16T14:56:14.796Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K1-02",
+  "slot": "fb-story",
+  "ok": true,
+  "postId": "6aaaae1ab79c385fba7d7120",
+  "status": "sent",
+  "info": "",
+  "at": "2026-09-16T14:56:25.831Z",
+  "mode": "shareNow",
+  "retried": false
  }
 ]
