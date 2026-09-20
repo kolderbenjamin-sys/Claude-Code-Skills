@@ -26,17 +26,38 @@ const { spawnSync } = require('child_process');
 const FFMPEG = process.env.FFMPEG || 'ffmpeg';
 const SIZES = { post: [1080, 1350], story: [1080, 1920], reel: [1080, 1920], carousel: [1080, 1350] };
 
+// 20. 9. 2026: K2-top5-38 vyšlo se všemi fotkami černými - networkidle + 300ms nezaručí,
+// že <img class="bg"> skutečně doběhl (pomalá první Cloudinary transformace / network hiccup
+// v kontejneru). Než se screenshotne, ověř naturalWidth > 0 a při selhání zkus znovu načíst.
+async function waitForImages(page, timeoutMs = 20000) {
+  const start = Date.now();
+  while (Date.now() - start < timeoutMs) {
+    const bad = await page.$$eval('img.bg', (imgs) => imgs.filter((im) => !im.complete || im.naturalWidth === 0).map((im) => im.src));
+    if (!bad.length) return;
+    await page.$$eval('img.bg', (imgs, list) => imgs.forEach((im) => { if (list.includes(im.src)) { const s = im.src; im.src = ''; im.src = s; } }), bad);
+    await page.waitForTimeout(1000);
+  }
+  const stillBad = await page.$$eval('img.bg', (imgs) => imgs.filter((im) => !im.complete || im.naturalWidth === 0).map((im) => im.src));
+  if (stillBad.length) throw new Error('obrázky se nenačetly: ' + stillBad.join(', '));
+}
+
 async function main() {
   const [kind, src, dst, secArg, fpsArg] = process.argv.slice(2);
   if (!SIZES[kind] || !src || !dst) { console.error('usage: node render.js <post|story|reel> <src.html> <dst> [sec] [fps]'); process.exit(1); }
   const [w, h] = SIZES[kind];
   fs.mkdirSync(path.dirname(dst), { recursive: true });
 
-  const browser = await loadChromium().launch({ executablePath: chromePath(), headless: true, args: ['--no-sandbox'] });
+  // Playwright Chromium nedědí HTTPS_PROXY z env (na rozdíl od curl/node fetch) - v cloud Routine kontejneru
+  // jde bez toho vnější fetch (Cloudinary fotky v <img>) přes proxy vůbec, proto 20. 9. 2026 K2-top5-38
+  // vyšlo se všemi fotkami černými. Předat proxy launchi explicitně, když je v env nastavená.
+  const proxyServer = process.env.HTTPS_PROXY || process.env.https_proxy;
+  const browser = await loadChromium().launch({ executablePath: chromePath(), headless: true, args: ['--no-sandbox'],
+    ...(proxyServer ? { proxy: { server: proxyServer } } : {}) });
   const page = await browser.newPage({ viewport: { width: kind === 'carousel' ? w + 80 : w, height: h }, deviceScaleFactor: 1 });
   await page.goto('file:///' + path.resolve(src).replace(/\\/g, '/'), { waitUntil: 'networkidle' });
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(300);
+  await waitForImages(page);
 
   if (kind === 'carousel') {
     // dst = prefix; každý .canvas se uloží jako prefix-1.png, prefix-2.png ...
