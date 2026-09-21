@@ -137,10 +137,10 @@ body { font-family: var(--body); color: var(--cream); -webkit-font-smoothing: an
 .row .n { font-family: var(--body); font-weight: 600; font-size: 34px; color: var(--cream); }
 .row .v { font-family: var(--mono); font-size: 34px; color: var(--cream); white-space: nowrap; }
 .row .v small { font-size: 24px; color: rgba(244,239,229,.7); margin-left: 12px; }
-.row .d { font-family: var(--mono); font-size: 30px; font-weight: 500; min-width: 150px; text-align: right; white-space: nowrap; }
+.row .d { font-family: var(--mono); font-size: 30px; font-weight: 500; text-align: right; white-space: nowrap; }
 .up { color: #9fd3a4; } .down { color: #f0a097; } .flat { color: rgba(244,239,229,.75); }
 .story .row .n, .story .row .v { font-size: 36px; }
-.reel .row .n, .reel .row .v { font-size: 32px; } .reel .row .d { font-size: 28px; min-width: 130px; }
+.reel .row .n, .reel .row .v { font-size: 32px; } .reel .row .d { font-size: 28px; }
 .photo .note { margin-top: 18px; font-family: var(--body); font-size: 27px; line-height: 1.35; color: rgba(244,239,229,.8); max-width: 900px; }
 
 /* top 5 seznam */

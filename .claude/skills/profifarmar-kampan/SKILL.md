@@ -114,23 +114,26 @@ přes Read** (jsou to obrázky): z grafu odečti k dnešnímu dni podíl území
 (svislá osa = % území, barvy podle legendy), z mapy pojmenuj nejhůř postižené oblasti (kraje/regiony slovy).
 Odečtené hodnoty piš s "≈", čísla z PDF přesně.
 
-Vyplň `/tmp/k2/puda.json`. **Texty v řádcích musí být krátké**, jinak se v postu lámou po slovech:
-`n` max 24 znaků, `v` max 18, `d` max 20. Vzor (reálná data 20. 9. 2026):
+Vyplň `/tmp/k2/puda.json`. **Přesně 4 řádky, žádný text navíc** (Ben 21. 9.: pět řádků s komentáři bylo
+"moc textu"). Sloupec `d` je jen značka `▼` / `✓`, žádné věty ani srovnání s minulostí (zajímá nás aktuální
+stav). `n` max 20 znaků, `v` max 18. Vzor schválený Benem (reálná data 20. 9. 2026):
 
 ```json
 {"chip":"týdenní monitor · půda","eyebrow":"39. týden · středa 23. 9. 2026",
- "title":"Půda před setím ozimů: povrch se doplnil, hlouběji sucho trvá",
+ "title":"Povrch půdy je po deštích vlhký, hlouběji sucho trvá",
  "photo_post":"puda-post.jpg","photo_story":"puda-story.jpg","acc":"green",
  "rows":[
-  {"n":"Půdní sucho · území ČR","v":"≈ 40","u":"%","d":"▼ z 90 % v srpnu","dir":"up"},
-  {"n":"Výrazné a horší sucho","v":"≈ 5","u":"%","d":"▼ po deštích","dir":"up"},
-  {"n":"Vrstva 0 až 40 cm","v":"doplněná","u":"","d":"✓ Morava, jih Čech","dir":"up"},
-  {"n":"Vrstva do 100 cm","v":"sucho trvá","u":"","d":"▼ málo vody","dir":"down"},
-  {"n":"Nejhůř","v":"jih Čech, Vysočina","u":"","d":"▼","dir":"down"}],
+  {"n":"Půdní sucho · ČR","v":"≈ 40","u":"% území","d":"▼","dir":"down"},
+  {"n":"Vrstva 0 až 40 cm","v":"doplněná","u":"","d":"✓","dir":"up"},
+  {"n":"Vrstva do 100 cm","v":"sucho trvá","u":"","d":"▼","dir":"down"},
+  {"n":"Nejsušší oblasti","v":"jih Čech, Vysočina","u":"","d":"▼","dir":"down"}],
  "foot_l":"↗ profifarmar.cz/pocasi","foot_r":"zdroj: intersucho.cz"}
 ```
 
-`dir` = `up` dobrá zpráva (zelené), `down` špatná (červené). Eyebrow = ISO týden a datum vydání. Čísla, která
+Řádky drž stejné každý týden (sucho v % území, vrstva 0 až 40 cm, vrstva do 100 cm, nejsušší oblasti), mění se
+jen hodnoty: `v` u vrstev je jedno až dvě slova (`doplněná`, `mírně suchá`, `sucho trvá`, `nasycená`), `dir`
+podle toho, jestli je to pro polní práce dobrá (`up`, zelená ✓) nebo špatná (`down`, červená ▼) zpráva.
+Titulek max 2 řádky (do ~50 znaků) a říká, co to znamená pro práci na poli. Eyebrow = ISO týden a datum vydání. Čísla, která
 v podkladech nejsou, **nevymýšlej** - řádek nahraď jiným údajem, který tam je (srážky za 10 dní v mm, výhled
 na 9 dní, nasycení půdy). Titulek vždy říká, co to znamená pro polní práce v daném týdnu (setí ozimů, sklizeň
 cukrovky a brambor, podzimní orba).
