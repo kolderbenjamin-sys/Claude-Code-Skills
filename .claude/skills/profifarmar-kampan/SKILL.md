@@ -86,37 +86,54 @@ FB:  <stejný hook>
 
 ### 2b - půdní monitor (`generate=puda`, středa)
 
-Zdroj je **Intersucho** (Mendelu + CzechGlobe, týdenní hodnocení k neděli), ne odhad z /pocasi:
+Zdroj je **Intersucho** (CzechGlobe + Mendelu), ne odhad z /pocasi. Postup ověřený 21. 9. 2026
+(web je na `/cs/`, `/cz/` vrací 301, proto vždy `-L`). Čtyři podklady:
 
 ```bash
-curl -sS -m 60 -A "Mozilla/5.0" https://www.intersucho.cz/cz/ -o /tmp/k2/intersucho.html
+mkdir -p /tmp/k2 && cd /tmp/k2
+UA="Mozilla/5.0"
+curl -sS -m 60 -L -A "$UA" https://www.intersucho.cz/cs/ -o intersucho.html
+# 1) perex posledního týdenního hodnocení (vychází v úterý, ve středu je tedy čerstvé)
+grep -o 'tydenni-aktuality-c-[0-9]*-2026' intersucho.html | sort -t- -k4 -n | tail -1      # např. tydenni-aktuality-c-38-2026
+# 2) PDF týdenního hodnocení (odkaz je na stránce aktuality)
+W=$(grep -o 'tydenni-aktuality-c-[0-9]*-2026' intersucho.html | sort -t- -k4 -n | tail -1)
+curl -sS -m 60 -L -A "$UA" "https://www.intersucho.cz/cs/$W/" -o tyden.html
+PDF=$(grep -o '/runtime/cache/files/original/[^"]*\.pdf' tyden.html | head -1)
+curl -sS -m 120 -L -A "$UA" "https://www.intersucho.cz$PDF" -o tyden.pdf
+(command -v pdftotext >/dev/null && pdftotext -enc UTF-8 -layout tyden.pdf tyden.txt) || python3 -c "import pypdf,sys;print('\n'.join(p.extract_text() or '' for p in pypdf.PdfReader('tyden.pdf').pages))" > tyden.txt || echo "PDF text nejde, použij jen perex"
+# 3) graf podílu území podle stupně sucha (0 až 100 cm, denně, s předpovědí)
+curl -sS -m 60 -L -A "$UA" https://www.intersucho.cz/runtime/cache/maps/cz/awp/graf_AWP.png -o graf.png
+# 4) mapa intenzity sucha k včerejšku (nejhůř postižené oblasti)
+D=$(date -u -d "yesterday" +%Y_%m_%d)
+curl -sS -m 60 -L -A "$UA" "https://www.intersucho.cz/runtime/cache/maps/cz/awp/$D/awp_${D}_CZ_country.png" -o mapa.png
 ```
 
-Z textu stránky (aktuální hodnocení, odstavec "Situace" a mapové souhrny) vytáhni pro ČR:
-1. podíl území zasaženého suchem (intenzita sucha, % území),
-2. podíl území s extrémním/výjimečným suchem (% území),
-3. deficit půdní vláhy (mm) nebo nasycení profilu 0 až 100 cm (%),
-4. nejhůř postižená oblast (kraj/region slovy),
-5. trend proti minulému týdnu (zlepšení/zhoršení/beze změny) a datum hodnocení.
+Perex hodnocení je i v HTML (`tyden.html`, odstavec za nadpisem "Týdenní aktuality č. N/2026"). `tyden.txt`
+obsahuje kapitoly s čísly (srážky za 10 dní, % území, výhled na 9 dní). **`graf.png` a `mapa.png` si otevři
+přes Read** (jsou to obrázky): z grafu odečti k dnešnímu dni podíl území se suchem S1 a horším a S3 a horším
+(svislá osa = % území, barvy podle legendy), z mapy pojmenuj nejhůř postižené oblasti (kraje/regiony slovy).
+Odečtené hodnoty piš s "≈", čísla z PDF přesně.
 
-Vyplň `/tmp/k2/puda.json` podle tohoto vzoru (5 řádků `rows`, `dir` = `up` dobrá zpráva / `down` špatná):
+Vyplň `/tmp/k2/puda.json`. **Texty v řádcích musí být krátké**, jinak se v postu lámou po slovech:
+`n` max 24 znaků, `v` max 18, `d` max 20. Vzor (reálná data 20. 9. 2026):
 
 ```json
 {"chip":"týdenní monitor · půda","eyebrow":"39. týden · středa 23. 9. 2026",
- "title":"Půda před setím ozimů: <hlavní sdělení z Intersucha>",
+ "title":"Půda před setím ozimů: povrch se doplnil, hlouběji sucho trvá",
  "photo_post":"puda-post.jpg","photo_story":"puda-story.jpg","acc":"green",
  "rows":[
-  {"n":"Území v suchu · ČR","v":"38","u":"%","d":"▼ méně než minulý týden","dir":"up"},
-  {"n":"Extrémní a výjimečné sucho","v":"16","u":"% území","d":"▲","dir":"down"},
-  {"n":"Deficit půdní vláhy · 0 až 100 cm","v":"−40","u":"mm","d":"proti normálu","dir":"down"},
-  {"n":"Nejhůř","v":"jižní Morava","u":"","d":"▼","dir":"down"},
-  {"n":"Hodnocení Intersucho","v":"k 20. 9.","u":"","d":"aktualizace týdně","dir":"up"}],
+  {"n":"Půdní sucho · území ČR","v":"≈ 40","u":"%","d":"▼ z 90 % v srpnu","dir":"up"},
+  {"n":"Výrazné a horší sucho","v":"≈ 5","u":"%","d":"▼ po deštích","dir":"up"},
+  {"n":"Vrstva 0 až 40 cm","v":"doplněná","u":"","d":"✓ Morava, jih Čech","dir":"up"},
+  {"n":"Vrstva do 100 cm","v":"sucho trvá","u":"","d":"▼ málo vody","dir":"down"},
+  {"n":"Nejhůř","v":"jih Čech, Vysočina","u":"","d":"▼","dir":"down"}],
  "foot_l":"↗ profifarmar.cz/pocasi","foot_r":"zdroj: intersucho.cz"}
 ```
 
-Čísla, která na stránce nejsou, **nevymýšlej** - řádek nahraď jiným údajem, který tam je (např. nasycení
-půdy, zásoba vody v půdě). Titulek vždy říká, co to znamená pro polní práce v daném týdnu (setí ozimů,
-sklizeň cukrovky, podzimní orba).
+`dir` = `up` dobrá zpráva (zelené), `down` špatná (červené). Eyebrow = ISO týden a datum vydání. Čísla, která
+v podkladech nejsou, **nevymýšlej** - řádek nahraď jiným údajem, který tam je (srážky za 10 dní v mm, výhled
+na 9 dní, nasycení půdy). Titulek vždy říká, co to znamená pro polní práce v daném týdnu (setí ozimů, sklizeň
+cukrovky a brambor, podzimní orba).
 
 ```bash
 export FFMPEG="$(bash "$SK/scripts/ensure-ffmpeg.sh")"   # npm ffmpeg-static → johnvansickle → apt, opakuje až 30 min
@@ -125,8 +142,10 @@ node "$SK/scripts/build.js" story "$SK/templates/monitor-story.html" /tmp/k2/pud
 node "$SK/scripts/build.js" reel  "$SK/templates/monitor-reel.html"  /tmp/k2/puda.json /tmp/k2/puda-reel.mp4 8 30
 ```
 
-Popisek: hook = hlavní sdělení + 1 číslo, tělo = "Půdní monitor: každou středu souhrn z Intersucha (Mendelu
-a CzechGlobe) za celou ČR. Detail počasí pro váš kraj na profifarmar.cz/pocasi." Hashtagy
+Popisek: hook = hlavní sdělení + 1 číslo (např. "Půda před setím ozimů: deště doplnily vrstvu do 40 cm, hlouběji
+sucho drží. Půdní sucho zasahuje už jen asi 40 % území, v srpnu to bylo 90 %."), tělo = "Půdní monitor: každou
+středu souhrn z Intersucha (Mendelu a CzechGlobe) za celou ČR. Nejhůř je na tom <oblast>. Detail počasí pro váš
+kraj na profifarmar.cz/pocasi." Hashtagy
 `#zemedelstvi #agro #profifarmar #pocasi #seti #tydennimonitor` (FB bez posledního). IG s "👉 profifarmar.cz/pocasi (odkaz v biu)",
 FB s "👉 https://profifarmar.cz/pocasi/".
 
