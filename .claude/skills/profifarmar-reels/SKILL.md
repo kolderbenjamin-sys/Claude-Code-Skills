@@ -126,8 +126,11 @@ titulek přesně z bezpečné zóny, kvůli které rozvržení vzniklo.
 Poslední číslo je délka v sekundách; 8 s je výchozí volba. Výstup: 1080×1920, 30 fps,
 H.264 High/4.1, tichá AAC stopa, faststart, ~2–3 MB.
 
-**ffmpeg v cloud kontejneru není** — skript si ho stáhne jako `ffmpeg-static` z npm.
-Bez sudo, bez apt.
+**ffmpeg v cloud kontejneru není** — obstará ho `scripts/ensure-ffmpeg.sh` (volá se
+automaticky z png-to-reel.sh). Zkouší postupně npm `ffmpeg-static` → statický build
+z johnvansickle.com → apt-get (jen s rootem), a při výpadku sítě celý řetězec opakuje
+až 30 minut (`FFMPEG_MAX_WAIT`). Priorita je doběhnout, ne rychle selhat - dlouhý běh
+je lepší než nevydaný reel.
 
 ---
 

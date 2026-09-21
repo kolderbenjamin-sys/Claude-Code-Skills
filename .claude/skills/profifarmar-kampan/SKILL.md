@@ -22,7 +22,8 @@ Pravidla, která platí vždy (dohodnuto s Benem 11. až 13. 9. 2026):
 - Env: `BUFFER_API_KEY`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` (K2 render).
   `AI_API_KEY` není potřeba (nejčtenější jde z veřejného endpointu).
 - Nástroje: node 22+ (fetch, FormData), pro K2 navíc Chromium (Playwright, globálně v kontejneru) a ffmpeg
-  (`npm i ffmpeg-static`, bez sudo). Fonty se tahají z Google Fonts, kontejner potřebuje síť.
+  (obstará `scripts/ensure-ffmpeg.sh`: npm `ffmpeg-static`, záložně johnvansickle static / apt,
+  při výpadku sítě opakuje až 30 min - má doběhnout, ne selhat). Fonty se tahají z Google Fonts, kontejner potřebuje síť.
 - Repo: `posted-kampan-log.json` v kořeni (na začátku `[]`). Commit logu + manifestu po každém běhu.
   Push jde jen na `claude/`-prefixed větev, pokud není povoleno "Allow unrestricted branch pushes";
   proto Krok 0 slučuje PR z minulého běhu.
@@ -118,8 +119,7 @@ půdy, zásoba vody v půdě). Titulek vždy říká, co to znamená pro polní 
 sklizeň cukrovky, podzimní orba).
 
 ```bash
-[ -d node_modules/ffmpeg-static ] || npm i --no-audit --no-fund ffmpeg-static >/dev/null 2>&1 || true
-export FFMPEG="$(node -p "require('ffmpeg-static')" 2>/dev/null || echo ffmpeg)"
+export FFMPEG="$(bash "$SK/scripts/ensure-ffmpeg.sh")"   # npm ffmpeg-static → johnvansickle → apt, opakuje až 30 min
 node "$SK/scripts/build.js" post  "$SK/templates/monitor-post.html"  /tmp/k2/puda.json /tmp/k2/puda-post.png
 node "$SK/scripts/build.js" story "$SK/templates/monitor-story.html" /tmp/k2/puda.json /tmp/k2/puda-story.png
 node "$SK/scripts/build.js" reel  "$SK/templates/monitor-reel.html"  /tmp/k2/puda.json /tmp/k2/puda-reel.mp4 8 30
@@ -216,7 +216,7 @@ log: 4/4 · commit ok
 |---|---|
 | `playwright not found` | globální playwright v kontejneru: `npm root -g`; jinak `CHROMIUM_PATH=/cesta/chrome` |
 | Chromium spadne na sandbox | render.js už používá `--no-sandbox` |
-| Reel bez ffmpeg | `npm i ffmpeg-static` a `export FFMPEG=$(node -p "require('ffmpeg-static')")` |
+| Reel bez ffmpeg | `export FFMPEG="$(bash "$SK/scripts/ensure-ffmpeg.sh")"` (čeká až 30 min, než to vzdá) |
 | Buffer 406 | header `Accept: text/event-stream, application/json` (publish.js ho posílá) |
 | Buffer odmítne story kvůli textu | publish.js zkusí znovu s názvem kusu jako textem |
 | Post skončí `error` "issue with the media" | IG nebere PNG story; publish.js posílá JPEG přes `f_jpg` a při erroru jednou znovu. Když padne i podruhé, zkontroluj URL v prohlížeči |

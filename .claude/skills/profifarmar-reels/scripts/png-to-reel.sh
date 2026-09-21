@@ -23,8 +23,8 @@
 # Proč se zoomuje z 2× nadvzorkovaného zdroje: zoompan počítá v celých pixelech
 # a na 1:1 vstupu pohyb viditelně trhá.
 #
-# ffmpeg v cloud kontejneru není — stáhne se jako npm balíček ffmpeg-static
-# (bez sudo, bez apt).
+# ffmpeg v cloud kontejneru není — obstará ho ensure-ffmpeg.sh (npm
+# ffmpeg-static, záložně johnvansickle static / apt, s opakováním).
 # --overlay: dvouvrstvý režim pro reel layout "band" (render-reel.mjs --layers).
 # Zoomuje se jen fotka (bg), sazba (fg, s alfou) leží nehybně navrchu. Bez toho
 # by zoom odtáhl titulek z bezpečné zóny, kvůli které se rozvržení posouvalo.
@@ -47,17 +47,10 @@ ZOOM_END=1.12   # o kolik se fotka za celou dobu přiblíží
 [ -f "$IN" ] || { echo "[REEL] CHYBA — vstupní soubor neexistuje: $IN"; exit 1; }
 
 # --- ffmpeg ---------------------------------------------------------------
-FFMPEG="$(command -v ffmpeg || true)"
-if [ -z "$FFMPEG" ]; then
-  FF_DIR="${FFMPEG_STATIC_DIR:-${TMPDIR:-/tmp}/ffmpeg-static}"
-  if [ ! -x "$FF_DIR/node_modules/ffmpeg-static/ffmpeg" ]; then
-    echo "[REEL] ffmpeg není v PATH — instaluji ffmpeg-static do $FF_DIR"
-    mkdir -p "$FF_DIR"
-    ( cd "$FF_DIR" && npm i ffmpeg-static --silent --no-fund --no-audit >/dev/null )
-  fi
-  FFMPEG="$FF_DIR/node_modules/ffmpeg-static/ffmpeg"
-fi
-[ -x "$FFMPEG" ] || { echo "[REEL] CHYBA — ffmpeg se nepodařilo získat."; exit 1; }
+# Získání ffmpeg řeší ensure-ffmpeg.sh vedle tohoto skriptu: řetězec zdrojů
+# (PATH → npm ffmpeg-static → johnvansickle static → apt) a při výpadku sítě
+# opakuje až 30 minut, než to vzdá. Nikdy nespadne po prvním neúspěchu.
+FFMPEG="$(bash "$(dirname "$0")/ensure-ffmpeg.sh")"   || { echo "[REEL] CHYBA — ffmpeg se nepodařilo získat."; exit 1; }
 
 # --- rozměry vstupu -------------------------------------------------------
 read -r W H < <("$FFMPEG" -i "$IN" 2>&1 \
