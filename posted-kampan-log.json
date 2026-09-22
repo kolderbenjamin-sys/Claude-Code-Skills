@@ -230,5 +230,104 @@
   "at": "2026-09-20T14:58:04.796Z",
   "mode": "shareNow",
   "retried": false
+ },
+ {
+  "id": "K1-05",
+  "slot": "ig-post",
+  "ok": false,
+  "postId": null,
+  "status": "create_failed",
+  "info": "{\"message\":\"There is an issue with the media included. Please remove it and try to upload it again.\"}",
+  "at": "2026-09-22T14:56:23.646Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K1-05",
+  "slot": "ig-story",
+  "ok": false,
+  "postId": null,
+  "status": "create_failed",
+  "info": "{\"message\":\"There is an issue with the media included. Please remove it and try to upload it again.\"}",
+  "at": "2026-09-22T14:56:25.857Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K1-05",
+  "slot": "ig-reel",
+  "ok": true,
+  "postId": "6ab2971d760fb23fa985e836",
+  "status": "sent",
+  "info": "",
+  "at": "2026-09-22T14:56:28.481Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K1-05",
+  "slot": "fb-post",
+  "ok": true,
+  "postId": "6ab29727dae2e648e5d82487",
+  "status": "sent",
+  "info": "",
+  "at": "2026-09-22T14:56:39.644Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K1-05",
+  "slot": "fb-story",
+  "ok": true,
+  "postId": "6ab2972c6145af85d3bc5ed9",
+  "status": "sent",
+  "info": "",
+  "at": "2026-09-22T14:56:44.295Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K1-05",
+  "slot": "fb-reel",
+  "ok": true,
+  "postId": "6ab29732bafcc0c7efe338c6",
+  "status": "sent",
+  "info": "",
+  "at": "2026-09-22T14:56:49.866Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K1-05",
+  "slot": "yt-reel",
+  "ok": true,
+  "postId": "6ab2973b29735bbf8c5d3e12",
+  "status": "sent",
+  "info": "",
+  "at": "2026-09-22T14:56:58.607Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K1-05",
+  "slot": "ig-post",
+  "ok": true,
+  "postId": "6ab297696145af85d3bc635b",
+  "status": "sent",
+  "info": "",
+  "at": "2026-09-22T14:57:44.960Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K1-05",
+  "slot": "ig-story",
+  "ok": true,
+  "postId": "6ab2977329735bbf8c5d4251",
+  "status": "sent",
+  "info": "",
+  "at": "2026-09-22T14:57:55.411Z",
+  "mode": "shareNow",
+  "retried": false
  }
 ]
