@@ -406,5 +406,82 @@
   "at": "2026-09-23T10:03:58.100Z",
   "mode": "shareNow",
   "retried": false
+ },
+ {
+  "id": "K1-07",
+  "slot": "ig-post",
+  "ok": true,
+  "postId": "6ab7dd3005811e57372f3740",
+  "status": "sent",
+  "info": "",
+  "at": "2026-09-26T14:56:47.189Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K1-07",
+  "slot": "ig-story",
+  "ok": true,
+  "postId": "6ab7dd3bccccb9429c309a8e",
+  "status": "sent",
+  "info": "",
+  "at": "2026-09-26T14:56:58.295Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K1-07",
+  "slot": "ig-reel",
+  "ok": false,
+  "postId": null,
+  "status": "create_failed",
+  "info": "{\"message\":\"It looks like there was an issue with the media attached to this post. Please check to ensure the media meets all specifications.\"}",
+  "at": "2026-09-26T14:57:08.415Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K1-07",
+  "slot": "fb-post",
+  "ok": true,
+  "postId": "6ab7dd49ccccb9429c30a2d1",
+  "status": "sent",
+  "info": "",
+  "at": "2026-09-26T14:57:13.119Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K1-07",
+  "slot": "fb-story",
+  "ok": true,
+  "postId": "6ab7dd4e3d66d464e5b38185",
+  "status": "sent",
+  "info": "",
+  "at": "2026-09-26T14:57:18.518Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K1-07",
+  "slot": "fb-reel",
+  "ok": true,
+  "postId": "6ab7dd574b4b9f2c1c4e8dd0",
+  "status": "sent",
+  "info": "",
+  "at": "2026-09-26T14:57:26.870Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K1-07",
+  "slot": "yt-reel",
+  "ok": true,
+  "postId": "6ab7dd603d66d464e5b38287",
+  "status": "sent",
+  "info": "",
+  "at": "2026-09-26T14:57:35.449Z",
+  "mode": "shareNow",
+  "retried": false
  }
 ]
