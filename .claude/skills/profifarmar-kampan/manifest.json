@@ -1,6 +1,6 @@
 {
  "tz": "Europe/Prague",
- "updated": "2026-09-13",
+ "updated": "2026-09-28",
  "items": [
   {
    "id": "K1-01",
@@ -225,18 +225,6 @@
    "note": ""
   },
   {
-   "id": "K2-puda-40",
-   "date": "2026-09-30",
-   "time": "12:00",
-   "campaign": "K2",
-   "generate": "puda",
-   "week": 40,
-   "name": "Půdní monitor týdne 40",
-   "yt_title": "Profifarmář: půdní monitor týdne",
-   "link": "https://profifarmar.cz/pocasi/",
-   "alt": "Půdní monitor: srážky, vlhkost a mrazy za ČR"
-  },
-  {
    "id": "K1-09",
    "date": "2026-09-30",
    "time": "17:00",
@@ -273,18 +261,6 @@
    "note": "ticker s položkami z 12. 9.; před vydáním obnovit"
   },
   {
-   "id": "K2-top5-40",
-   "date": "2026-10-04",
-   "time": "12:00",
-   "campaign": "K2",
-   "generate": "top5",
-   "week": 40,
-   "name": "Nejčtenější týdne 40",
-   "yt_title": "Profifarmář: 5 nejčtenějších článků týdne",
-   "link": "https://profifarmar.cz/",
-   "alt": "Nejčtenější články týdne na profifarmar.cz"
-  },
-  {
    "id": "K1-11",
    "date": "2026-10-04",
    "time": "17:00",
@@ -301,18 +277,6 @@
    "ig": "První přízemní mrazíky přicházejí. Rozdíl mezi 0 a minus 2 stupni v noci je rozdíl mezi klidem a škodou.\n\nRiziko nočních mrazů na profifarmar.cz ukazuje pro váš kraj nejnižší očekávanou teplotu na 24 hodin dopředu a slovní hodnocení. Aktualizace každou hodinu, 14 krajů.\n\n👉 profifarmar.cz/pocasi (odkaz v biu)\n\n#zemedelstvi #agro #profifarmar #mraz #pocasi #coumiprofifarmar",
    "fb": "První přízemní mrazíky přicházejí. Rozdíl mezi 0 a minus 2 stupni v noci je rozdíl mezi klidem a škodou.\n\n👉 https://profifarmar.cz/pocasi/\n\nRiziko nočních mrazů na profifarmar.cz ukazuje pro váš kraj nejnižší očekávanou teplotu na 24 hodin dopředu a slovní hodnocení. Aktualizace každou hodinu, 14 krajů.\n\n#zemedelstvi #agro #profifarmar #mraz #pocasi",
    "note": "před vydáním obnovit hodnoty z /pocasi (v říjnu může být riziko)"
-  },
-  {
-   "id": "K2-puda-41",
-   "date": "2026-10-07",
-   "time": "12:00",
-   "campaign": "K2",
-   "generate": "puda",
-   "week": 41,
-   "name": "Půdní monitor týdne 41",
-   "yt_title": "Profifarmář: půdní monitor týdne",
-   "link": "https://profifarmar.cz/pocasi/",
-   "alt": "Půdní monitor: srážky, vlhkost a mrazy za ČR"
   },
   {
    "id": "K1-13",
@@ -352,18 +316,6 @@
    "ig": "Kukuřice na zrno se sklízí a vy hledáte, co jsme psali o konkrétním stroji. Napište název, výsledky naskočí hned.\n\nVyhledávání na profifarmar.cz funguje při psaní, bez Enteru: název stroje, plodina, dotace. Výsledky s rubrikou, datem a perexem.\n\n👉 profifarmar.cz (odkaz v biu)\n\n#zemedelstvi #agro #profifarmar #technika #hledani #coumiprofifarmar",
    "fb": "Kukuřice na zrno se sklízí a vy hledáte, co jsme psali o konkrétním stroji. Napište název, výsledky naskočí hned.\n\n👉 https://profifarmar.cz/\n\nVyhledávání na profifarmar.cz funguje při psaní, bez Enteru: název stroje, plodina, dotace. Výsledky s rubrikou, datem a perexem.\n\n#zemedelstvi #agro #profifarmar #technika #hledani",
    "note": ""
-  },
-  {
-   "id": "K2-top5-41",
-   "date": "2026-10-11",
-   "time": "12:00",
-   "campaign": "K2",
-   "generate": "top5",
-   "week": 41,
-   "name": "Nejčtenější týdne 41",
-   "yt_title": "Profifarmář: 5 nejčtenějších článků týdne",
-   "link": "https://profifarmar.cz/",
-   "alt": "Nejčtenější články týdne na profifarmar.cz"
   },
   {
    "id": "K1-15",
@@ -406,6 +358,34 @@
    "ig": "Třicet dní, osm nástrojů. Co jste možná minuli, máte v jednom carouselu.\n\nNewsletter každé pondělí, počasí pro farmáře, kalkulačka hnojení, cenový pásek, aktuality, historie a kontext, hledání. Všechno na profifarmar.cz, zdarma a bez registrace. Díky, že čtete.\n\n👉 profifarmar.cz (odkaz v biu)\n\n#zemedelstvi #agro #profifarmar #farmar #agronom #coumiprofifarmar",
    "fb": "Třicet dní, osm nástrojů. Co jste možná minuli, máte v jednom carouselu.\n\n👉 https://profifarmar.cz/\n\nNewsletter každé pondělí, počasí pro farmáře, kalkulačka hnojení, cenový pásek, aktuality, historie a kontext, hledání. Všechno na profifarmar.cz, zdarma a bez registrace. Díky, že čtete.\n\n#zemedelstvi #agro #profifarmar #farmar #agronom",
    "note": "story a reel ze slidu 8"
+  }
+ ],
+ "recurring": [
+  {
+   "prefix": "K2-top5",
+   "weekday": 0,
+   "time": "12:00",
+   "campaign": "K2",
+   "generate": "top5",
+   "from": "2026-10-04",
+   "enabled": true,
+   "name": "Nejčtenější týdne {w}",
+   "yt_title": "Profifarmář: 5 nejčtenějších článků týdne",
+   "link": "https://profifarmar.cz/",
+   "alt": "Nejčtenější články týdne na profifarmar.cz"
+  },
+  {
+   "prefix": "K2-puda",
+   "weekday": 3,
+   "time": "12:00",
+   "campaign": "K2",
+   "generate": "puda",
+   "from": "2026-09-30",
+   "enabled": true,
+   "name": "Půdní monitor týdne {w}",
+   "yt_title": "Profifarmář: půdní monitor týdne",
+   "link": "https://profifarmar.cz/pocasi/",
+   "alt": "Půdní monitor: sucho a vláha v půdě za ČR"
   }
  ]
 }

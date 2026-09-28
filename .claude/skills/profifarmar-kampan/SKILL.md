@@ -45,6 +45,13 @@ Výstup `NIC <datum>` → konec, žádná notifikace. Jinak řádky `ID  čas  r
 Vydávej jen kusy, jejichž `čas` odpovídá slotu tohoto běhu (11:55 → 12:00, 16:55 → 17:00); druhý slot
 nech druhému běhu. Kus se `status: manual|waiting|done` today.js sám vynechá.
 
+Kusy jsou dvojího druhu:
+- **jednorázové** (`manifest.items` s datem): K1 feature cardy, končí 13. 10. 2026;
+- **opakované** (`manifest.recurring`, pravidlo podle dne v týdnu, běží dál bez konce): **nejčtenější každou
+  neděli 12:00** (`K2-top5-<rok>-<ISO týden>`) a **půdní monitor každou středu 12:00** (`K2-puda-<rok>-<týden>`).
+  today.js je vypíše sám, do manifestu se zapíšou až v Kroku 2c přes `set-item.js` (ten položku založí z pravidla).
+  Když už položka z dřívějšího pokusu má obrázky, today.js ji vypíše jako `ready` a vydá se bez nového renderu.
+
 ## Krok 2 - K2 kus: vyrenderuj (jen `generate=...`)
 
 ### 2a - nejčtenější týdne (`generate=top5`, neděle)
@@ -155,7 +162,7 @@ FB s "👉 https://profifarmar.cz/pocasi/".
 ### 2c - nahraj a zapiš do manifestu
 
 ```bash
-ID=K2-top5-39   # z Kroku 1
+ID=K2-top5-2026-41   # přesně ID z Kroku 1
 urls=""
 for f in /tmp/k2/top5-carousel-*.png; do u=$(node "$SK/scripts/upload.js" "$f" "${ID}_$(basename "$f" .png)"); urls="${urls:+$urls,}$u"; done
 story=$(node "$SK/scripts/upload.js" /tmp/k2/top5-story.png "${ID}_story")
@@ -228,7 +235,11 @@ log: 4/4 · commit ok
 - Nový hotový kus: nahrát soubory (`upload.js`) a doplnit `images/story/reel/ig/fb` přes `set-item.js`.
 - Assety leží v Cloudinary složce **`KAMPAN/`**, ne v `SOCIALS/`: pondělní úklidová routine maže v `SOCIALS/`
   vše starší 48 h bez odeslaného postu, což by kampaňové kusy nahrané dopředu smazalo.
-- K1-06 Cenový pásek a K2 Ceny komodit nejsou v manifestu: čekají na Kč/t na webu.
+- **Opakované rubriky** se řídí `manifest.recurring` (`prefix`, `weekday` 0 = neděle ... 6 = sobota, `time`,
+  `generate`, `from`/`until`, `enabled`). Vypnout rubriku = `"enabled": false`, ukončit = `"until": "RRRR-MM-DD"`.
+  Vynechat jeden týden = do `items` přidat `{"id":"K2-puda-2026-44","date":...,"status":"skip"}`.
+- K1-06 Cenový pásek a K2 Ceny komodit nejsou v manifestu: čekají na Kč/t na webu. Až bude zdroj, přidat pravidlo
+  `{"prefix":"K2-ceny","weekday":1,...,"generate":"ceny"}` a krok renderu podle šablon `monitor-*`.
 - Zdrojové šablony, data a rendery všech K1 kusů jsou lokálně u Bena v
   `Claude-Workspace/Agro/ProfiFarmar-info/social-kampane/` (`make_manifest.py` manifest přegeneruje).
 
