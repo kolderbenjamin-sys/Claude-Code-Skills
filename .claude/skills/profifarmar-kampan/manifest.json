@@ -281,6 +281,30 @@
    "note": "ticker s položkami z 12. 9.; před vydáním obnovit"
   },
   {
+   "id": "K2-top5-2026-40",
+   "date": "2026-10-04",
+   "time": "12:00",
+   "campaign": "K2",
+   "generate": "top5",
+   "week": 40,
+   "name": "Nejčtenější týdne 40",
+   "yt_title": "Profifarmář: 5 nejčtenějších článků týdne",
+   "link": "https://profifarmar.cz/",
+   "alt": "Nejčtenější články týdne na profifarmar.cz",
+   "recurring": "K2-top5",
+   "images": [
+    "https://res.cloudinary.com/dxrpsbvx2/image/upload/v1791107871/KAMPAN/K2-top5-2026-40_top5-carousel-1.png",
+    "https://res.cloudinary.com/dxrpsbvx2/image/upload/v1791107872/KAMPAN/K2-top5-2026-40_top5-carousel-2.png",
+    "https://res.cloudinary.com/dxrpsbvx2/image/upload/v1791107873/KAMPAN/K2-top5-2026-40_top5-carousel-3.png",
+    "https://res.cloudinary.com/dxrpsbvx2/image/upload/v1791107874/KAMPAN/K2-top5-2026-40_top5-carousel-4.png",
+    "https://res.cloudinary.com/dxrpsbvx2/image/upload/v1791107875/KAMPAN/K2-top5-2026-40_top5-carousel-5.png",
+    "https://res.cloudinary.com/dxrpsbvx2/image/upload/v1791107876/KAMPAN/K2-top5-2026-40_top5-carousel-6.png"
+   ],
+   "story": "https://res.cloudinary.com/dxrpsbvx2/image/upload/v1791107877/KAMPAN/K2-top5-2026-40_story.png",
+   "ig": "Meliorace, konec výroby traktorů Zetor, tisíc odrůd jablek, autonomní postřikovač Kubota a historie řepky. Pět článků, které jste tento týden četli nejvíc.\n\nNejčtenější týdne: každou neděli žebříček z profifarmar.cz. Kdo něco minul, má druhou šanci. Celé články na webu.\n\n👉 profifarmar.cz (odkaz v biu)\n\n#zemedelstvi #agro #profifarmar #zpravy #agronom #tydennimonitor",
+   "fb": "Meliorace, konec výroby traktorů Zetor, tisíc odrůd jablek, autonomní postřikovač Kubota a historie řepky. Pět článků, které jste tento týden četli nejvíc.\n\n👉 https://profifarmar.cz/\n\nNejčtenější týdne: každou neděli žebříček z profifarmar.cz. Kdo něco minul, má druhou šanci. Celé články na webu.\n\n#zemedelstvi #agro #profifarmar #zpravy #agronom"
+  },
+  {
    "id": "K1-11",
    "date": "2026-10-04",
    "time": "17:00",
