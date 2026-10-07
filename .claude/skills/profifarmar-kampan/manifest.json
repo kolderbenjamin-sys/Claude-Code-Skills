@@ -323,6 +323,26 @@
    "note": "před vydáním obnovit hodnoty z /pocasi (v říjnu může být riziko)"
   },
   {
+   "id": "K2-puda-2026-41",
+   "date": "2026-10-07",
+   "time": "12:00",
+   "campaign": "K2",
+   "generate": "puda",
+   "week": 41,
+   "name": "Půdní monitor týdne 41",
+   "yt_title": "Profifarmář: půdní monitor týdne",
+   "link": "https://profifarmar.cz/pocasi/",
+   "alt": "Půdní monitor: sucho a vláha v půdě za ČR",
+   "recurring": "K2-puda",
+   "images": [
+    "https://res.cloudinary.com/dxrpsbvx2/image/upload/v1791367454/KAMPAN/K2-puda-2026-41_post.png"
+   ],
+   "story": "https://res.cloudinary.com/dxrpsbvx2/image/upload/v1791367455/KAMPAN/K2-puda-2026-41_story.png",
+   "reel": "https://res.cloudinary.com/dxrpsbvx2/video/upload/v1791367457/KAMPAN/K2-puda-2026-41_reel.mp4",
+   "ig": "Půda před setím ozimů: povrch mírně vyschlý, hlouběji sucho dál sílí. Půdní sucho zasahuje už asi 80 % území ČR.\n\nPůdní monitor: každou středu souhrn z Intersucha (Mendelu a CzechGlobe) za celou ČR. Ve čtvrtek přejde přes republiku studená fronta se srážkami, hlouběji v půdě se ale zlepšení zatím nečeká. Nejhůř je na tom jih Moravy a jih Čech. Detail počasí pro váš kraj na profifarmar.cz/pocasi.\n\n👉 profifarmar.cz/pocasi (odkaz v biu)\n\n#zemedelstvi #agro #profifarmar #pocasi #seti #tydennimonitor",
+   "fb": "Půda před setím ozimů: povrch mírně vyschlý, hlouběji sucho dál sílí. Půdní sucho zasahuje už asi 80 % území ČR.\n\n👉 https://profifarmar.cz/pocasi/\n\nPůdní monitor: každou středu souhrn z Intersucha (Mendelu a CzechGlobe) za celou ČR. Ve čtvrtek přejde přes republiku studená fronta se srážkami, hlouběji v půdě se ale zlepšení zatím nečeká. Nejhůř je na tom jih Moravy a jih Čech. Detail počasí pro váš kraj na profifarmar.cz/pocasi.\n\n#zemedelstvi #agro #profifarmar #pocasi #seti"
+  },
+  {
    "id": "K1-13",
    "date": "2026-10-08",
    "time": "17:00",
