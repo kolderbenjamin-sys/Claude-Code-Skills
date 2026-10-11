@@ -382,6 +382,30 @@
    "note": ""
   },
   {
+   "id": "K2-top5-2026-41",
+   "date": "2026-10-11",
+   "time": "12:00",
+   "campaign": "K2",
+   "generate": "top5",
+   "week": 41,
+   "name": "Nejčtenější týdne 41",
+   "yt_title": "Profifarmář: 5 nejčtenějších článků týdne",
+   "link": "https://profifarmar.cz/",
+   "alt": "Nejčtenější články týdne na profifarmar.cz",
+   "recurring": "K2-top5",
+   "images": [
+    "https://res.cloudinary.com/dxrpsbvx2/image/upload/v1791712669/KAMPAN/K2-top5-2026-41_top5-carousel-1.png",
+    "https://res.cloudinary.com/dxrpsbvx2/image/upload/v1791712670/KAMPAN/K2-top5-2026-41_top5-carousel-2.png",
+    "https://res.cloudinary.com/dxrpsbvx2/image/upload/v1791712671/KAMPAN/K2-top5-2026-41_top5-carousel-3.png",
+    "https://res.cloudinary.com/dxrpsbvx2/image/upload/v1791712672/KAMPAN/K2-top5-2026-41_top5-carousel-4.png",
+    "https://res.cloudinary.com/dxrpsbvx2/image/upload/v1791712673/KAMPAN/K2-top5-2026-41_top5-carousel-5.png",
+    "https://res.cloudinary.com/dxrpsbvx2/image/upload/v1791712674/KAMPAN/K2-top5-2026-41_top5-carousel-6.png"
+   ],
+   "story": "https://res.cloudinary.com/dxrpsbvx2/image/upload/v1791712675/KAMPAN/K2-top5-2026-41_story.png",
+   "ig": "Sprej WEDA Smart-ID na prasnice, brněnská škola veterinářů, mimořádná pomoc 654 milionů od SZIF, zámek Kačina jako muzeum, Case IH Magnum 405 a kombajn AF9. Pět článků, které jste tento týden četli nejvíc.\n\nNejčtenější týdne: každou neděli žebříček z profifarmar.cz. Kdo něco minul, má druhou šanci. Celé články na webu.\n\n👉 profifarmar.cz (odkaz v biu)\n\n#zemedelstvi #agro #profifarmar #zpravy #agronom #tydennimonitor",
+   "fb": "Sprej WEDA Smart-ID na prasnice, brněnská škola veterinářů, mimořádná pomoc 654 milionů od SZIF, zámek Kačina jako muzeum, Case IH Magnum 405 a kombajn AF9. Pět článků, které jste tento týden četli nejvíc.\n\n👉 https://profifarmar.cz/\n\nNejčtenější týdne: každou neděli žebříček z profifarmar.cz. Kdo něco minul, má druhou šanci. Celé články na webu.\n\n#zemedelstvi #agro #profifarmar #zpravy #agronom"
+  },
+  {
    "id": "K1-15",
    "date": "2026-10-12",
    "time": "17:00",
