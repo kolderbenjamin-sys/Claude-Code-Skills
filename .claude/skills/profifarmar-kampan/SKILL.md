@@ -238,7 +238,7 @@ log: 4/4 · commit ok
 - **Opakované rubriky** se řídí `manifest.recurring` (`prefix`, `weekday` 0 = neděle ... 6 = sobota, `time`,
   `generate`, `from`/`until`, `enabled`). Vypnout rubriku = `"enabled": false`, ukončit = `"until": "RRRR-MM-DD"`.
   Vynechat jeden týden = do `items` přidat `{"id":"K2-puda-2026-44","date":...,"status":"skip"}`.
-- K1-06 Cenový pásek a K2 Ceny komodit nejsou v manifestu: čekají na Kč/t na webu. Až bude zdroj, přidat pravidlo
+- K1-06 Cenový pásek vyšel 12. 10. 2026 (web přepnut na Kč/t). K2 Ceny komodit zatím vypnuté: až bude chtít Ben týdenní ceny, přidat pravidlo
   `{"prefix":"K2-ceny","weekday":1,...,"generate":"ceny"}` a krok renderu podle šablon `monitor-*`.
 - Zdrojové šablony, data a rendery všech K1 kusů jsou lokálně u Bena v
   `Claude-Workspace/Agro/ProfiFarmar-info/social-kampane/` (`make_manifest.py` manifest přegeneruje).

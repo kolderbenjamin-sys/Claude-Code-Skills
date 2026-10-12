@@ -423,6 +423,24 @@
    "status": "waiting"
   },
   {
+   "id": "K1-06",
+   "date": "2026-10-12",
+   "time": "17:00",
+   "campaign": "K1",
+   "name": "Cenový pásek",
+   "yt_title": "Profifarmar.cz umí: ceny komodit v Kč za tunu",
+   "link": "https://profifarmar.cz/",
+   "alt": "Profifarmar.cz umí: cenový pásek",
+   "images": [
+    "https://res.cloudinary.com/dxrpsbvx2/image/upload/v1791804514/KAMPAN/K1-06_2026-10-12_cenovy-pasek_post.png"
+   ],
+   "story": "https://res.cloudinary.com/dxrpsbvx2/image/upload/v1791804518/KAMPAN/K1-06_2026-10-12_cenovy-pasek_story.png",
+   "reel": "https://res.cloudinary.com/dxrpsbvx2/video/upload/v1791804517/KAMPAN/K1-06_2026-10-12_cenovy-pasek_reel.mp4",
+   "ig": "Po žních se prodává. A cena, za kterou prodáte, se mění každý den.\n\nCenový pásek nahoře na každé stránce profifarmar.cz ukazuje pšenici, kukuřici, sóju a řepku v Kč za tunu, k tomu naftu a ropu Brent. Vždy s denní změnou, nemusíte nikam klikat.\n\n👉 profifarmar.cz (odkaz v biu)\n\n#zemedelstvi #agro #profifarmar #cenykomodit #trhy #coumiprofifarmar",
+   "fb": "Po žních se prodává. A cena, za kterou prodáte, se mění každý den.\n\n👉 https://profifarmar.cz/\n\nCenový pásek nahoře na každé stránce profifarmar.cz ukazuje pšenici, kukuřici, sóju a řepku v Kč za tunu, k tomu naftu a ropu Brent. Vždy s denní změnou, nemusíte nikam klikat.\n\n#zemedelstvi #agro #profifarmar #cenykomodit #trhy",
+   "note": "pásek přepnut na Kč/t 12. 10. 2026, vizuál = stav webu ten den"
+  },
+  {
    "id": "K1-16",
    "date": "2026-10-13",
    "time": "17:00",
