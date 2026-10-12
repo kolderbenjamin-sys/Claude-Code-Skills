@@ -222,6 +222,11 @@ jen když: chybí env proměnná, today.js/top5.js/build.js/upload.js spadne, pu
 stalo a co má Ben udělat ručně (typicky: pustit routine znovu, nebo vydat zbylý formát ručně ze souborů
 na Cloudinary, URL jsou v manifestu).
 
+**Úkol pro Bena po vydání:** když má vydaný kus v manifestu pole `notify`, pošli po úspěšném vydání
+`PushNotification` (`status: "proactive"`) i při bezchybném běhu. První věta = text z `notify` (co má Ben ručně
+doplnit), druhá = které sloty vyšly (např. "IG post, story a reel venku 17:00"). Typicky ruční anketa na IG,
+kterou Buffer neumí vložit.
+
 ## Run summary (do transcriptu)
 
 ```
