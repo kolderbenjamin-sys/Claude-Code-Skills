@@ -42,11 +42,13 @@ node "$SK/scripts/today.js" "$SK/manifest.json"
 ```
 
 Výstup `NIC <datum>` → konec, žádná notifikace. Jinak řádky `ID  čas  ready|generate=top5|generate=puda  název`.
-Vydávej jen kusy, jejichž `čas` odpovídá slotu tohoto běhu (11:55 → 12:00, 16:55 → 17:00); druhý slot
-nech druhému běhu. Kus se `status: manual|waiting|done` today.js sám vynechá.
+Vydávej jen kusy, jejichž `čas` odpovídá slotu tohoto běhu: **dopolední běh (před 14:00 Europe/Prague) = slot
+12:00, odpolední běh = slot 17:00**; druhý slot nech druhému běhu. Cron je v UTC (`55 9,14`), takže po konci
+letního času (od 25. 10.) běh přijde v 10:55 a 15:55 - pořád je to dopolední a odpolední běh, vydej normálně. Kus se `status: manual|waiting|done` today.js sám vynechá.
 
 Kusy jsou dvojího druhu:
-- **jednorázové** (`manifest.items` s datem): K1 feature cardy, končí 13. 10. 2026;
+- **jednorázové** (`manifest.items` s datem): K1 feature cardy (do 13. 10. 2026) a K3 Podzim ve strojích
+  (16. 10. až 11. 11. 2026, předrenderované, jen vydat);
 - **opakované** (`manifest.recurring`, pravidlo podle dne v týdnu, běží dál bez konce): **nejčtenější každou
   neděli 12:00** (`K2-top5-<rok>-<ISO týden>`) a **půdní monitor každou středu 12:00** (`K2-puda-<rok>-<týden>`).
   today.js je vypíše sám, do manifestu se zapíšou až v Kroku 2c přes `set-item.js` (ten položku založí z pravidla).
