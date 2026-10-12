@@ -224,8 +224,9 @@ na Cloudinary, URL jsou v manifestu).
 
 **Úkol pro Bena po vydání:** když má vydaný kus v manifestu pole `notify`, pošli po úspěšném vydání
 `PushNotification` (`status: "proactive"`) i při bezchybném běhu. První věta = text z `notify` (co má Ben ručně
-doplnit), druhá = které sloty vyšly (např. "IG post, story a reel venku 17:00"). Typicky ruční anketa na IG,
-kterou Buffer neumí vložit.
+doplnit, včetně URL souborů), druhá = které sloty vyšly (např. "FB post, story, reel a YT venku 17:00").
+Pole `skip` (např. `["ig-post","ig-story","ig-reel"]`) = sloty, které publish.js vynechá a Ben je vydá ručně
+z mobilu (IG s anketou, kterou Buffer neumí vložit); notifikace mu v ten den pošle hotové soubory.
 
 ## Run summary (do transcriptu)
 

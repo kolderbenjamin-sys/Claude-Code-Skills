@@ -63,7 +63,8 @@ function slots(ch) {
   if (item.story) S.push({ slot: 'fb-story', ch: ch.facebook, text: '', assets: [img(item.story)], meta: { facebook: { type: 'story' } } });
   if (item.reel) S.push({ slot: 'fb-reel', ch: ch.facebook, text: item.fb, assets: [vid(item.reel)], meta: { facebook: { type: 'reel' } } });
   if (item.reel && ch.youtube) S.push({ slot: 'yt-reel', ch: ch.youtube, text: item.ig, assets: [vid(item.reel)], meta: { youtube: { title: item.yt_title || item.name, categoryId: '22', notifySubscribers: false } } });
-  return S.filter((s) => !ONLY.length || ONLY.includes(s.slot)).filter((s) => !done.has(s.slot));
+  // item.skip = sloty, které Ben vydává ručně (např. IG s anketou, kterou Buffer neumí vložit)
+  return S.filter((s) => !ONLY.length || ONLY.includes(s.slot)).filter((s) => !(item.skip || []).includes(s.slot)).filter((s) => !done.has(s.slot));
 }
 
 function postId(res) { return typeof res === 'string' ? null : (res.id || res.postId || null); }
