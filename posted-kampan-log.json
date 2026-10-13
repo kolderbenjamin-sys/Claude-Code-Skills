@@ -1242,5 +1242,82 @@
   "at": "2026-10-12T15:50:27.393Z",
   "mode": "shareNow",
   "retried": false
+ },
+ {
+  "id": "K1-16",
+  "slot": "ig-post",
+  "ok": false,
+  "postId": null,
+  "status": "create_failed",
+  "info": "\"Invalid post: Image could not be read from its URL., Image could not be read from its URL., Image could not be read from its URL., Image could not be read from its URL., Image could not be read from its URL., Image could not be read from its URL., Image could not be read from its URL., Image could ",
+  "at": "2026-10-13T14:56:47.196Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K1-16",
+  "slot": "ig-story",
+  "ok": false,
+  "postId": null,
+  "status": "create_failed",
+  "info": "\"Invalid post: Image could not be read from its URL.\"",
+  "at": "2026-10-13T14:56:47.829Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K1-16",
+  "slot": "ig-reel",
+  "ok": false,
+  "postId": null,
+  "status": "create_failed",
+  "info": "\"Invalid post: Video could not be read from its URL.\"",
+  "at": "2026-10-13T14:56:48.265Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K1-16",
+  "slot": "fb-post",
+  "ok": false,
+  "postId": null,
+  "status": "create_failed",
+  "info": "\"Invalid post: Image could not be read from its URL., Image could not be read from its URL., Image could not be read from its URL., Image could not be read from its URL., Image could not be read from its URL., Image could not be read from its URL., Image could not be read from its URL., Image could ",
+  "at": "2026-10-13T14:56:48.628Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K1-16",
+  "slot": "fb-story",
+  "ok": false,
+  "postId": null,
+  "status": "create_failed",
+  "info": "\"Invalid post: Image could not be read from its URL.\"",
+  "at": "2026-10-13T14:56:49.029Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K1-16",
+  "slot": "fb-reel",
+  "ok": false,
+  "postId": null,
+  "status": "create_failed",
+  "info": "\"Invalid post: Video could not be read from its URL.\"",
+  "at": "2026-10-13T14:56:49.278Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K1-16",
+  "slot": "yt-reel",
+  "ok": false,
+  "postId": null,
+  "status": "create_failed",
+  "info": "\"Invalid post: Video could not be read from its URL.\"",
+  "at": "2026-10-13T14:56:49.481Z",
+  "mode": "shareNow",
+  "retried": false
  }
 ]
