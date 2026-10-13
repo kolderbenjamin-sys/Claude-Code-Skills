@@ -1319,5 +1319,82 @@
   "at": "2026-10-13T14:56:49.481Z",
   "mode": "shareNow",
   "retried": false
+ },
+ {
+  "id": "K1-16",
+  "slot": "ig-post",
+  "ok": true,
+  "postId": "6ace48e72f0712f5901301f3",
+  "status": "sent",
+  "info": "",
+  "at": "2026-10-13T15:06:15.218Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K1-16",
+  "slot": "ig-story",
+  "ok": true,
+  "postId": "6ace48f3aae68f5d3ccc6264",
+  "status": "sent",
+  "info": "",
+  "at": "2026-10-13T15:06:26.758Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K1-16",
+  "slot": "ig-reel",
+  "ok": true,
+  "postId": "6ace48feaae68f5d3ccc64a8",
+  "status": "sent",
+  "info": "",
+  "at": "2026-10-13T15:06:37.817Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K1-16",
+  "slot": "fb-post",
+  "ok": true,
+  "postId": "6ace49092f0712f590130b64",
+  "status": "sent",
+  "info": "",
+  "at": "2026-10-13T15:06:48.932Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K1-16",
+  "slot": "fb-story",
+  "ok": true,
+  "postId": "6ace4913aefe64c2a8cd84c9",
+  "status": "sent",
+  "info": "",
+  "at": "2026-10-13T15:06:59.962Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K1-16",
+  "slot": "fb-reel",
+  "ok": true,
+  "postId": "6ace49192f0712f590131073",
+  "status": "sent",
+  "info": "",
+  "at": "2026-10-13T15:07:05.755Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K1-16",
+  "slot": "yt-reel",
+  "ok": true,
+  "postId": "6ace4923aefe64c2a8cd91b1",
+  "status": "sent",
+  "info": "",
+  "at": "2026-10-13T15:07:15.707Z",
+  "mode": "shareNow",
+  "retried": false
  }
 ]
