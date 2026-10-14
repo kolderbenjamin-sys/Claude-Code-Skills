@@ -466,6 +466,26 @@
    "note": "story a reel ze slidu 8"
   },
   {
+   "id": "K2-puda-2026-42",
+   "date": "2026-10-14",
+   "time": "12:00",
+   "campaign": "K2",
+   "generate": "puda",
+   "week": 42,
+   "name": "Půdní monitor týdne 42",
+   "yt_title": "Profifarmář: půdní monitor týdne",
+   "link": "https://profifarmar.cz/pocasi/",
+   "alt": "Půdní monitor: sucho a vláha v půdě za ČR",
+   "recurring": "K2-puda",
+   "images": [
+    "https://res.cloudinary.com/dxrpsbvx2/image/upload/v1791972024/KAMPAN/K2-puda-2026-42_post.png"
+   ],
+   "story": "https://res.cloudinary.com/dxrpsbvx2/image/upload/v1791972025/KAMPAN/K2-puda-2026-42_story.png",
+   "reel": "https://res.cloudinary.com/dxrpsbvx2/video/upload/v1791972026/KAMPAN/K2-puda-2026-42_reel.mp4",
+   "ig": "Půda před setím ozimů: deště doplnily vrstvu do 40 cm, hlouběji ale sucho drží. Odchylka od normálu v celém půdním profilu zasahuje asi 69 % území, nejhůř je na jihu Čech a na Břeclavsku.\n\nPůdní monitor: každou středu souhrn z Intersucha (Mendelu a CzechGlobe) za celou ČR. Detail počasí pro váš kraj na profifarmar.cz/pocasi.\n\n👉 profifarmar.cz/pocasi (odkaz v biu)\n\n#zemedelstvi #agro #profifarmar #pocasi #seti #tydennimonitor",
+   "fb": "Půda před setím ozimů: deště doplnily vrstvu do 40 cm, hlouběji ale sucho drží. Odchylka od normálu v celém půdním profilu zasahuje asi 69 % území, nejhůř je na jihu Čech a na Břeclavsku.\n\nPůdní monitor: každou středu souhrn z Intersucha (Mendelu a CzechGlobe) za celou ČR. Detail počasí pro váš kraj na profifarmar.cz/pocasi.\n\n👉 https://profifarmar.cz/pocasi/\n\n#zemedelstvi #agro #profifarmar #pocasi #seti"
+  },
+  {
    "id": "K3-01",
    "date": "2026-10-16",
    "time": "17:00",
