@@ -544,6 +544,26 @@
    "reel": "https://res.cloudinary.com/dxrpsbvx2/video/upload/v1791806982/KAMPAN/K3-02_2026-10-20_cukrovka_reel.mp4"
   },
   {
+   "id": "K2-puda-2026-43",
+   "date": "2026-10-21",
+   "time": "12:00",
+   "campaign": "K2",
+   "generate": "puda",
+   "week": 43,
+   "name": "Půdní monitor týdne 43",
+   "yt_title": "Profifarmář: půdní monitor týdne",
+   "link": "https://profifarmar.cz/pocasi/",
+   "alt": "Půdní monitor: sucho a vláha v půdě za ČR",
+   "recurring": "K2-puda",
+   "images": [
+    "https://res.cloudinary.com/dxrpsbvx2/image/upload/v1792576863/KAMPAN/K2-puda-2026-43_post.png"
+   ],
+   "story": "https://res.cloudinary.com/dxrpsbvx2/image/upload/v1792576864/KAMPAN/K2-puda-2026-43_story.png",
+   "reel": "https://res.cloudinary.com/dxrpsbvx2/video/upload/v1792576865/KAMPAN/K2-puda-2026-43_reel.mp4",
+   "ig": "Půdní sucho: povrch pořád suchý, úleva má přijít do čtvrtka. Půdní sucho zasahuje aktuálně asi 46 % území, nejhůř je na tom jih Čech a Morava.\n\nPůdní monitor: každou středu souhrn z Intersucha (Mendelu a CzechGlobe) za celou ČR. Nejhůř je na tom jih Čech a Morava. Detail počasí pro váš kraj na profifarmar.cz/pocasi.\n\n👉 profifarmar.cz/pocasi (odkaz v biu)\n\n#zemedelstvi #agro #profifarmar #pocasi #seti #tydennimonitor",
+   "fb": "Půdní sucho: povrch pořád suchý, úleva má přijít do čtvrtka. Půdní sucho zasahuje aktuálně asi 46 % území, nejhůř je na tom jih Čech a Morava.\n\n👉 https://profifarmar.cz/pocasi/\n\nPůdní monitor: každou středu souhrn z Intersucha (Mendelu a CzechGlobe) za celou ČR. Nejhůř je na tom jih Čech a Morava. Detail počasí pro váš kraj na profifarmar.cz/pocasi.\n\n#zemedelstvi #agro #profifarmar #pocasi #seti"
+  },
+  {
    "id": "K3-03",
    "date": "2026-10-23",
    "time": "17:00",
