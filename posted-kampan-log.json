@@ -2254,5 +2254,49 @@
   "at": "2026-10-30T15:59:04.598Z",
   "mode": "shareNow",
   "retried": false
+ },
+ {
+  "id": "K3-08",
+  "slot": "fb-post",
+  "ok": true,
+  "postId": "6ae60fbd1ee172cd6dad7bae",
+  "status": "sent",
+  "info": "",
+  "at": "2026-10-31T15:56:44.632Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K3-08",
+  "slot": "fb-story",
+  "ok": true,
+  "postId": "6ae60fc321c807e9d570898b",
+  "status": "sent",
+  "info": "",
+  "at": "2026-10-31T15:56:50.550Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K3-08",
+  "slot": "fb-reel",
+  "ok": true,
+  "postId": "6ae60fc8ab019b90870faf91",
+  "status": "sent",
+  "info": "",
+  "at": "2026-10-31T15:56:56.518Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K3-08",
+  "slot": "yt-reel",
+  "ok": true,
+  "postId": "6ae60fd21ee172cd6dad858a",
+  "status": "sent",
+  "info": "",
+  "at": "2026-10-31T15:57:06.145Z",
+  "mode": "shareNow",
+  "retried": false
  }
 ]
