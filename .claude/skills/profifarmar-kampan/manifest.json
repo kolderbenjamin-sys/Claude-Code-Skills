@@ -716,6 +716,30 @@
    ]
   },
   {
+   "id": "K2-top5-2026-44",
+   "date": "2026-11-01",
+   "time": "12:00",
+   "campaign": "K2",
+   "generate": "top5",
+   "week": 44,
+   "name": "Nejčtenější týdne 44",
+   "yt_title": "Profifarmář: 5 nejčtenějších článků týdne",
+   "link": "https://profifarmar.cz/",
+   "alt": "Nejčtenější články týdne na profifarmar.cz",
+   "recurring": "K2-top5",
+   "images": [
+    "https://res.cloudinary.com/dxrpsbvx2/image/upload/v1793530671/KAMPAN/K2-top5-2026-44_top5-carousel-1.png",
+    "https://res.cloudinary.com/dxrpsbvx2/image/upload/v1793530672/KAMPAN/K2-top5-2026-44_top5-carousel-2.png",
+    "https://res.cloudinary.com/dxrpsbvx2/image/upload/v1793530673/KAMPAN/K2-top5-2026-44_top5-carousel-3.png",
+    "https://res.cloudinary.com/dxrpsbvx2/image/upload/v1793530674/KAMPAN/K2-top5-2026-44_top5-carousel-4.png",
+    "https://res.cloudinary.com/dxrpsbvx2/image/upload/v1793530675/KAMPAN/K2-top5-2026-44_top5-carousel-5.png",
+    "https://res.cloudinary.com/dxrpsbvx2/image/upload/v1793530676/KAMPAN/K2-top5-2026-44_top5-carousel-6.png"
+   ],
+   "story": "https://res.cloudinary.com/dxrpsbvx2/image/upload/v1793530677/KAMPAN/K2-top5-2026-44_story.png",
+   "ig": "Tereziánský katastr a bonitní třídy, 8. kolo SZP za 2,39 miliardy, slunečnice porazila sucho, Ponsse sází stromy rychlostí 750 za hodinu, Zoomlion 9DX s 1 600 koňmi. Pět článků, které jste tento týden četli nejvíc.\n\nNejčtenější týdne: každou neděli žebříček z profifarmar.cz. Kdo něco minul, má druhou šanci. Celé články na webu.\n\n👉 profifarmar.cz (odkaz v biu)\n\n#zemedelstvi #agro #profifarmar #zpravy #agronom #tydennimonitor",
+   "fb": "Tereziánský katastr a bonitní třídy, 8. kolo SZP za 2,39 miliardy, slunečnice porazila sucho, Ponsse sází stromy rychlostí 750 za hodinu, Zoomlion 9DX s 1 600 koňmi. Pět článků, které jste tento týden četli nejvíc.\n\n👉 https://profifarmar.cz/\n\nNejčtenější týdne: každou neděli žebříček z profifarmar.cz. Kdo něco minul, má druhou šanci. Celé články na webu.\n\n#zemedelstvi #agro #profifarmar #zpravy #agronom"
+  },
+  {
    "id": "K3-09",
    "date": "2026-11-03",
    "time": "17:00",
