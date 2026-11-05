@@ -334,13 +334,12 @@ echo "$cloudinary_url"
 
 ## Krok 5 — Copywriting
 
-Story nemá klasický popisek jako feed — text je jen krátký doprovod v Bufferu a hlavní sdělení nese
-vizuál. Proto:
+Story **nemá žádný popisek**. Facebook ho u story zobrazí přes obrázek a vypadá to špatně, takže se
+do Bufferu neposílá žádný text ani na Facebook, ani na Instagram. Hlavní sdělení nese vizuál.
 
-- **1 věta, max ~90 znaků.** Vytáhni z titulku hlavní fakt nebo číslo.
-- **Žádné hashtagy** — ve story nemají dosahový efekt jako na feedu.
-- **Žádné „odkaz v biu"** — na Instagramu je přímo v story link sticker (Krok 6).
-- Stejný text použij pro Instagram i Facebook.
+- **Nepiš žádný text.** Ani jednu větu, hashtagy, ani „odkaz v biu".
+- Argument `$2` ve funkci `create_story` zůstává kvůli kompatibilitě volání, ale ignoruje se.
+- Na Instagramu je přímo ve story link sticker (Krok 6), ten text nepotřebuje.
 
 ---
 
@@ -417,15 +416,15 @@ pošle se rovnou ven přes `shareNow`. U story to nevadí: žijí 24 h, je běž
 několik za sebou, a lepší je vydaná story v nevhodnou hodinu než žádná.
 
 ```bash
-create_story() {   # $1 channel  $2 text  $3 image  $4 alt  $5 dueAt  $6 instagram|facebook  $7 clanek_url
+create_story() {   # $1 channel  $2 (ignoruje se, story bez textu)  $3 image  $4 alt  $5 dueAt  $6 instagram|facebook  $7 clanek_url
   local meta base out
   if [ "$6" = "instagram" ]; then
     meta=$(jq -n --arg l "$7" '{instagram:{type:"story",shouldShareToFeed:false,link:$l}}')
   else
     meta='{"facebook":{"type":"story"}}'
   fi
-  base=$(jq -n --arg ch "$1" --arg t "$2" --arg u "$3" --arg a "$4" --argjson m "$meta" '
-    { channelId: $ch, text: $t,
+  base=$(jq -n --arg ch "$1" --arg u "$3" --arg a "$4" --argjson m "$meta" '
+    { channelId: $ch,
       assets: [ { image: { url: $u, metadata: { altText: $a } } } ],
       schedulingType: "automatic", metadata: $m }')
 
