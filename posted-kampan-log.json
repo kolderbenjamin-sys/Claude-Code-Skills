@@ -2573,5 +2573,49 @@
   "at": "2026-11-06T15:58:05.686Z",
   "mode": "shareNow",
   "retried": false
+ },
+ {
+  "id": "K2-top5-2026-45",
+  "slot": "ig-post",
+  "ok": true,
+  "postId": "6af0559e9214322f684a097d",
+  "status": "sent",
+  "info": "",
+  "at": "2026-11-08T10:57:33.837Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K2-top5-2026-45",
+  "slot": "ig-story",
+  "ok": true,
+  "postId": "6af055a9562f2e6de9b1fdb9",
+  "status": "sent",
+  "info": "",
+  "at": "2026-11-08T10:57:44.907Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K2-top5-2026-45",
+  "slot": "fb-post",
+  "ok": true,
+  "postId": "6af055b09214322f684a0b35",
+  "status": "sent",
+  "info": "",
+  "at": "2026-11-08T10:57:52.767Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K2-top5-2026-45",
+  "slot": "fb-story",
+  "ok": true,
+  "postId": "6af055bb004e4879a7afdb7a",
+  "status": "sent",
+  "info": "",
+  "at": "2026-11-08T10:58:03.278Z",
+  "mode": "shareNow",
+  "retried": false
  }
 ]
