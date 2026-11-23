@@ -356,15 +356,23 @@ Z `SUCCESS:` odpovědi vytáhni `secure_url` → `[CLOUDINARY_URL]`.
 
 ## Krok 7 — Nastav cover image a publikuj (PUT)
 
+**Alt text (cover_image_alt) - povinné u každého nového coveru:** vždy ho vytvoř a pošli v PUT spolu s `cover_image_url` (API přijímá i `imageAlt`, `coverImageAlt`, `image_alt`; ukládá se do `articles.cover_image_alt`, server ořízne na 250 znaků).
+- Česky, 1 věta, ideálně 60-125 znaků.
+- Popisuje, co je na obrázku vidět (odvoď z promptu / skutečného obrázku), ne nadpis článku. Nezačínat "Obrázek..." / "Fotka...".
+- Klíčové slovo článku jen pokud na obrázku opravdu je (plodina, stroj, zvíře).
+- Špatně: "Ceny pšenice klesly o 8 %", "obrázek traktoru". Dobře: "Zralé pole ozimé pšenice před sklizní pod zataženou oblohou", "Traktor s pluhem při podzimní orbě strniště na jižní Moravě".
+- Staré články bez altu se nedoplňují, jen nové.
+
 ```powershell
 $token = [System.Environment]::GetEnvironmentVariable('AI_API_KEY', 'User')
 $articleId = "[ARTICLE.id]"
 $coverUrl = "[CLOUDINARY_URL]"
+$altText = "[ALT_TEXT]"   # viz pravidla alt textu výše, bez uvozovek
 
 # Pokud je článek draft → nastav i status:
-$json = "{`"id`":`"$articleId`",`"cover_image_url`":`"$coverUrl`",`"status`":`"published`"}"
+$json = "{`"id`":`"$articleId`",`"cover_image_url`":`"$coverUrl`",`"cover_image_alt`":`"$altText`",`"status`":`"published`"}"
 # Pokud je článek už published → pošli jen cover_image_url:
-# $json = "{`"id`":`"$articleId`",`"cover_image_url`":`"$coverUrl`"}"
+# $json = "{`"id`":`"$articleId`",`"cover_image_url`":`"$coverUrl`",`"cover_image_alt`":`"$altText`"}"
 
 $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
 $response = Invoke-WebRequest -Uri "https://profifarmar.cz/api/webhook.php" -Method PUT `
@@ -406,7 +414,7 @@ Zobraz shrnutí v češtině:
 4. Krok 4 — stáhni obrázek lokálně + vizuální kontrola
 5. Krok 5 — komprese, jen pokud >10 MB
 6. Krok 6 — Cloudinary upload
-7. Krok 7 — PUT (cover_image_url + publish)
+7. Krok 7 — PUT (cover_image_url + cover_image_alt + publish)
 8. Krok 8 — úklid a shrnutí
 
 ---
@@ -478,7 +486,7 @@ Tato fáze trvá ~3 × 10 s = 30 s — stále rychlejší než kompletní sério
 
 ### Batch Krok 7 — Cloudinary upload (paralelně) + PUT update (paralelně)
 
-V jedné message spusť **3 paralelní PowerShell calls** pro Cloudinary upload. Po dokončení v další message **3 paralelní PUT** requesty pro nastavení `cover_image_url` + `status: published`.
+V jedné message spusť **3 paralelní PowerShell calls** pro Cloudinary upload. Po dokončení v další message **3 paralelní PUT** requesty pro nastavení `cover_image_url` + `cover_image_alt` + `status: published`.
 
 ### Batch Krok 8 — Úklid + souhrnný report
 

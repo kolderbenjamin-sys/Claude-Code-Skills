@@ -257,6 +257,13 @@ Ulož si seznam jako `[ARTICLES_NO_COVER]` — pole `{ id, title, status }`.
 
 ## Krok 5 — Nastav cover image a publikuj (PUT requesty)
 
+**Alt text (cover_image_alt) - povinné u každého nového coveru:** vždy ho vytvoř a pošli v PUT spolu s `cover_image_url` (API přijímá i `imageAlt`, `coverImageAlt`, `image_alt`; ukládá se do `articles.cover_image_alt`, server ořízne na 250 znaků).
+- Česky, 1 věta, ideálně 60-125 znaků.
+- Popisuje, co je na obrázku vidět (odvoď ze skutečného obrázku, který jsi spároval s článkem), ne nadpis článku. Nezačínat "Obrázek..." / "Fotka...".
+- Klíčové slovo článku jen pokud na obrázku opravdu je (plodina, stroj, zvíře).
+- Špatně: "Ceny pšenice klesly o 8 %", "obrázek traktoru". Dobře: "Zralé pole ozimé pšenice před sklizní pod zataženou oblohou", "Traktor s pluhem při podzimní orbě strniště na jižní Moravě".
+- Staré články bez altu se nedoplňují, jen nové.
+
 Pro každý úspěšně nahraný pár v `[PAIRS]` pošli PUT request. **Nezávislé PUT requesty lze spustit paralelně.**
 
 Pokud článek **je `draft`**, pošli PUT s `cover_image_url` + `status: published`.
@@ -266,11 +273,12 @@ Pokud článek **již je `published`**, pošli PUT jen s `cover_image_url`.
 $token = [System.Environment]::GetEnvironmentVariable('AI_API_KEY', 'User')
 $articleId = "[ARTICLE_ID]"
 $coverUrl = "[CLOUDINARY_URL]"
+$altText = "[ALT_TEXT]"   # viz pravidla alt textu výše, bez uvozovek
 
 # Pokud článek je draft:
-$json = "{`"id`":`"$articleId`",`"cover_image_url`":`"$coverUrl`",`"status`":`"published`"}"
+$json = "{`"id`":`"$articleId`",`"cover_image_url`":`"$coverUrl`",`"cover_image_alt`":`"$altText`",`"status`":`"published`"}"
 # Pokud článek už je published:
-# $json = "{`"id`":`"$articleId`",`"cover_image_url`":`"$coverUrl`"}"
+# $json = "{`"id`":`"$articleId`",`"cover_image_url`":`"$coverUrl`",`"cover_image_alt`":`"$altText`"}"
 
 $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
 
