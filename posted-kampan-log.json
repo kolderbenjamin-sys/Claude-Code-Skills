@@ -2936,5 +2936,93 @@
   "at": "2026-11-22T10:58:10.864Z",
   "mode": "shareNow",
   "retried": false
+ },
+ {
+  "id": "K2-puda-2026-48",
+  "slot": "ig-post",
+  "ok": true,
+  "postId": "6b06c00654905beab83b708e",
+  "status": "sent",
+  "info": "",
+  "at": "2026-11-25T11:01:25.734Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K2-puda-2026-48",
+  "slot": "ig-story",
+  "ok": true,
+  "postId": "6b06c011e525f5a4eef49e92",
+  "status": "sent",
+  "info": "",
+  "at": "2026-11-25T11:01:36.650Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K2-puda-2026-48",
+  "slot": "ig-reel",
+  "ok": true,
+  "postId": "6b06c01ce525f5a4eef4ae01",
+  "status": "sent",
+  "info": "",
+  "at": "2026-11-25T11:01:47.810Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K2-puda-2026-48",
+  "slot": "fb-post",
+  "ok": true,
+  "postId": "6b06c026e525f5a4eef4b42f",
+  "status": "sent",
+  "info": "",
+  "at": "2026-11-25T11:01:58.594Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K2-puda-2026-48",
+  "slot": "fb-story",
+  "ok": true,
+  "postId": "6b06c03054905beab83b8626",
+  "status": "sent",
+  "info": "",
+  "at": "2026-11-25T11:02:08.457Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K2-puda-2026-48",
+  "slot": "fb-reel",
+  "ok": true,
+  "postId": "6b06c03654905beab83b88a0",
+  "status": "sent",
+  "info": "",
+  "at": "2026-11-25T11:02:13.901Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K2-puda-2026-48",
+  "slot": "yt-reel",
+  "ok": false,
+  "postId": null,
+  "status": "create_failed",
+  "info": "MCP error -32602: Input validation error: Invalid arguments for tool create_post: Invalid option: expected one of \"short\"|\"regularVideo\" at metadata.youtube.type",
+  "at": "2026-11-25T11:02:24.464Z",
+  "mode": "shareNow",
+  "retried": false
+ },
+ {
+  "id": "K2-puda-2026-48",
+  "slot": "yt-reel",
+  "ok": true,
+  "postId": "6b06c0c5a06cd4c4bb434e8c",
+  "status": "sent",
+  "info": "",
+  "at": "2026-11-25T11:04:36.699Z",
+  "mode": "shareNow",
+  "retried": false
  }
 ]
